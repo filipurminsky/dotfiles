@@ -53,6 +53,16 @@ dotfiles config status.showUntrackedFiles no
 > On a headless remote (Ubuntu server), GUI apps/fonts are skipped — Nerd Font
 > glyphs render in your **local** terminal over SSH, so the prompt/icons still work.
 
+## Tear down a box
+Reverse everything `bootstrap.sh` installed and leave the machine as it was:
+```sh
+~/.config/dotfiles/teardown.sh        # prompts per step;  -y for unattended
+```
+It reads a manifest `bootstrap.sh` writes (`~/.local/state/dotfiles/bootstrap.manifest`)
+and only removes what *it* installed — **pre-existing apt packages, Homebrew, Oh My
+Zsh, and your login shell are preserved**. Tool data and cloned configs (nvim/yazi,
+plugins, fnm) are always removed; the dotfiles checkout itself is removed on confirm.
+
 ## Day-to-day
 Use the `dotfiles` alias like `git`:
 ```sh

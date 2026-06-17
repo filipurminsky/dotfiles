@@ -12,13 +12,23 @@ OS="$(uname -s)"   # Darwin | Linux
 info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Manifest of what THIS run installs, so teardown.sh reverses only these and
+# leaves anything that pre-existed untouched. One fact per line, deduped.
+MANIFEST="$HOME/.local/state/dotfiles/bootstrap.manifest"
+mkdir -p "$(dirname "$MANIFEST")"
+record() { grep -qxF "$1" "$MANIFEST" 2>/dev/null || echo "$1" >> "$MANIFEST"; }
+
 # 1. Homebrew (+ Linux build prerequisites) ---------------------------------
 if [ "$OS" = "Linux" ]; then
   info "Installing Linuxbrew prerequisites via apt"
   sudo apt-get update
+  for p in build-essential procps curl file git; do
+    dpkg -s "$p" >/dev/null 2>&1 || record "apt:$p"   # only packages we add
+  done
   sudo apt-get install -y build-essential procps curl file git
 fi
 if ! have brew; then
+  record "brew"
   info "Installing Homebrew"
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
@@ -39,6 +49,7 @@ fi
 
 # 3. Oh My Zsh --------------------------------------------------------------
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  record "omz"
   info "Installing Oh My Zsh"
   RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -99,7 +110,7 @@ fi
 # 9. SDKMAN (optional) ------------------------------------------------------
 if [ ! -d "$HOME/.sdkman" ]; then
   read -r -p "Install SDKMAN (Java/Gradle/Maven)? [y/N] " a
-  [ "${a:-N}" = "y" ] && curl -s "https://get.sdkman.io" | bash
+  if [ "${a:-N}" = "y" ]; then record "sdkman"; curl -s "https://get.sdkman.io" | bash; fi
 fi
 
 # 10. Default login shell -> zsh (servers default to bash) ------------------
@@ -107,6 +118,7 @@ ZSH_BIN="$(command -v zsh || true)"
 if [ -n "$ZSH_BIN" ] && [ "${SHELL:-}" != "$ZSH_BIN" ]; then
   read -r -p "Set zsh ($ZSH_BIN) as your login shell? [y/N] " a
   if [ "${a:-N}" = "y" ]; then
+    record "shell:$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || echo "${SHELL:-}")"
     grep -qx "$ZSH_BIN" /etc/shells || echo "$ZSH_BIN" | sudo tee -a /etc/shells >/dev/null
     chsh -s "$ZSH_BIN"
   fi
