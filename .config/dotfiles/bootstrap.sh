@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Bootstrap a fresh macOS machine from the dotfiles repo.
+#
+# Run AFTER the bare dotfiles repo has been checked out into $HOME
+# (see README.md for the checkout steps). Idempotent: safe to re-run.
+set -euo pipefail
+
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.config/zsh}"
+GH_USER="filipurminsky"
+
+info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# 1. Homebrew ---------------------------------------------------------------
+if ! have brew; then
+  info "Installing Homebrew"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# 2. Brew packages ----------------------------------------------------------
+if [ -f "$HOME/Brewfile" ]; then
+  info "Installing packages from ~/Brewfile"
+  brew bundle --file="$HOME/Brewfile"
+fi
+
+# 3. Oh My Zsh --------------------------------------------------------------
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  info "Installing Oh My Zsh"
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+# 4. Custom zsh plugins (live in $ZSH_CUSTOM/plugins, cloned not vendored) ---
+info "Installing zsh plugins into $ZSH_CUSTOM/plugins"
+mkdir -p "$ZSH_CUSTOM/plugins"
+clone_plugin() {  # <repo-url> <dir>
+  local dir="$ZSH_CUSTOM/plugins/$2"
+  [ -d "$dir" ] || git clone --depth=1 "$1" "$dir"
+}
+clone_plugin https://github.com/zsh-users/zsh-autosuggestions      zsh-autosuggestions
+clone_plugin https://github.com/zsh-users/zsh-syntax-highlighting  zsh-syntax-highlighting
+clone_plugin https://github.com/jeffreytse/zsh-vi-mode             zsh-vi-mode
+
+# 5. gh auth (needed to clone the repos below, incl. private yazi-config) ---
+if have gh && ! gh auth status >/dev/null 2>&1; then
+  info "Log in to GitHub CLI"
+  gh auth login
+fi
+
+clone_repo() {  # <repo> <target>
+  [ -d "$2/.git" ] && { info "$2 already present"; return; }
+  info "Cloning $1 -> $2"
+  if have gh; then gh repo clone "$GH_USER/$1" "$2"; else git clone "https://github.com/$GH_USER/$1.git" "$2"; fi
+}
+
+# 6. Neovim + yazi configs (their own repos) --------------------------------
+clone_repo nvim-config "$HOME/.config/nvim"
+clone_repo yazi-config "$HOME/.config/yazi"
+if have ya; then info "Installing yazi packages"; ya pkg install || true; fi
+
+# 7. tmux: TPM + plugins ----------------------------------------------------
+TPM="$HOME/.config/tmux/plugins/tpm"
+if [ ! -d "$TPM" ]; then
+  info "Installing TPM"
+  git clone --depth=1 https://github.com/tmux-plugins/tpm "$TPM"
+fi
+info "Installing tmux plugins"
+"$TPM/bin/install_plugins" || true
+
+# 8. Node versions via fnm --------------------------------------------------
+if have fnm; then
+  info "Installing Node versions via fnm"
+  eval "$(fnm env)"
+  fnm install 20.20.2 || true
+  fnm install 24.15.0 || true
+  fnm default 24.15.0 || true
+fi
+
+# 9. SDKMAN (optional) ------------------------------------------------------
+if [ ! -d "$HOME/.sdkman" ]; then
+  read -r -p "Install SDKMAN (Java/Gradle/Maven)? [y/N] " a
+  [ "${a:-N}" = "y" ] && curl -s "https://get.sdkman.io" | bash
+fi
+
+# 10. Machine-local git identity -------------------------------------------
+if [ ! -f "$HOME/.gitconfig.local" ]; then
+  info "Creating ~/.gitconfig.local (git identity — not tracked)"
+  read -r -p "  git user.name:  " name
+  read -r -p "  git user.email: " email
+  printf '[user]\n\tname = %s\n\temail = %s\n' "$name" "$email" > "$HOME/.gitconfig.local"
+fi
+
+info "Done. Open a new shell. Optional: 'atuin import auto' (history), 'atuin login' (sync)."
