@@ -55,16 +55,18 @@ clone_plugin https://github.com/zsh-users/zsh-autosuggestions      zsh-autosugge
 clone_plugin https://github.com/zsh-users/zsh-syntax-highlighting  zsh-syntax-highlighting
 clone_plugin https://github.com/jeffreytse/zsh-vi-mode             zsh-vi-mode
 
-# 5. gh auth (needed to clone the repos below, incl. private yazi-config) ---
-if have gh && ! gh auth status >/dev/null 2>&1; then
-  info "Log in to GitHub CLI"
-  gh auth login
-fi
-
+# 5. Repo clone helper: prefer anonymous HTTPS (works for public repos with no
+#    auth prompt, so unattended runs don't block). Fall back to gh only if the
+#    public clone fails (i.e. the repo is private), authenticating then.
 clone_repo() {  # <repo> <target>
   [ -d "$2/.git" ] && { info "$2 already present"; return; }
   info "Cloning $1 -> $2"
-  if have gh; then gh repo clone "$GH_USER/$1" "$2"; else git clone "https://github.com/$GH_USER/$1.git" "$2"; fi
+  git clone "https://github.com/$GH_USER/$1.git" "$2" 2>/dev/null && return
+  if have gh; then
+    info "Public clone failed (private repo?) — authenticating with gh"
+    gh auth status >/dev/null 2>&1 || gh auth login
+    gh repo clone "$GH_USER/$1" "$2"
+  fi
 }
 
 # 6. Neovim + yazi configs (their own repos) --------------------------------
