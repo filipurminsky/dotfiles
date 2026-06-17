@@ -79,7 +79,11 @@ if [ ! -d "$TPM" ]; then
   git clone --depth=1 https://github.com/tmux-plugins/tpm "$TPM"
 fi
 info "Installing tmux plugins"
-"$TPM/bin/install_plugins" || true
+# Run inside a throwaway detached server so tmux.conf (and TPM) is sourced,
+# otherwise install_plugins errors with "TMUX_PLUGIN_MANAGER_PATH unset" headless.
+tmux new-session -d -s __tpm_install 2>/dev/null || true
+"$TPM/bin/install_plugins" >/dev/null 2>&1 || true
+tmux kill-session -t __tpm_install 2>/dev/null || true
 
 # 8. Node versions via fnm --------------------------------------------------
 if have fnm; then

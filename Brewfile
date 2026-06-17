@@ -93,8 +93,6 @@ brew "stern"
 brew "tfenv"
 # Terminal multiplexer
 brew "tmux"
-# Plugin manager for tmux
-brew "tpm"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Parser generator tool

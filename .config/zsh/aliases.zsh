@@ -24,7 +24,7 @@ alias lg='lazygit'
 # binary directly (aliases don't apply there, so no loop).
 alias kubectl='kubecolor'
 alias k='kubecolor'
-compdef kubecolor=kubectl   # kubectl completions for kubecolor (and k/kubectl aliases)
+(( $+functions[_kubectl] )) && compdef kubecolor=kubectl   # kubectl completions for kubecolor/k (only if kubectl present)
 
 # --- dotfiles (bare repo: git db in ~/.dotfiles, work-tree is $HOME) --------
 # Use like git: `dotfiles status`, `dotfiles add ~/.zshrc`, `dotfiles push`.
