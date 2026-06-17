@@ -12,7 +12,7 @@
 # from a parent directory. fnm is near-instant, so no lazy-load is needed.
 # NOTE: fnm provides no `nvm` command, and Node versions installed via nvm are
 # not visible to it — install versions with `fnm install` (e.g. `fnm install --lts`).
-eval "$(fnm env --use-on-cd --version-file-strategy recursive)"
+command -v fnm >/dev/null && eval "$(fnm env --use-on-cd --version-file-strategy recursive)"
 
 # SDKMAN (eager: puts java/gradle/mvn on PATH; lazy-loading would hide them)
 export SDKMAN_DIR="$HOME/.sdkman"
@@ -22,4 +22,4 @@ export SDKMAN_DIR="$HOME/.sdkman"
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # zoxide (provides the `z` command; smarter cd with frecency)
-eval "$(zoxide init zsh)"
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"

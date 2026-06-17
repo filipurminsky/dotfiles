@@ -111,14 +111,4 @@ brew "yq"
 brew "zoxide"
 # Kubernetes CLI To Manage Your Clusters In Style!
 brew "derailed/k9s/k9s", trusted: true
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
-cask "font-jetbrains-mono-nerd-font"
-cask "font-symbols-only-nerd-font"
-# Disk space cleaner that finds and deletes duplicated and similar files
-cask "gemini"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
-# Free cross-platform office suite, fresh version
-cask "libreoffice"
 npm "corepack"

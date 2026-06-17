@@ -1,15 +1,15 @@
 # dotfiles
 
-My macOS shell/tool configuration, tracked as a **bare git repo** (git db in
-`~/.dotfiles`, work-tree is `$HOME`) so files are version-controlled in place —
-no symlinks.
+My **macOS / Linux** shell/tool configuration, tracked as a **bare git repo**
+(git db in `~/.dotfiles`, work-tree is `$HOME`) so files are version-controlled
+in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 
 ## What's tracked here
-- `.zshrc` and `.config/zsh/*.zsh` (exports, aliases, functions, tools)
+- `.zshrc`, `.zprofile`, and `.config/zsh/*.zsh` (exports, aliases, functions, tools)
 - `.gitconfig` (identity is in the untracked `~/.gitconfig.local`)
 - `.config/tmux/tmux.conf`
 - `.config/atuin/config.toml`
-- `Brewfile` (all Homebrew packages)
+- `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks/fonts)
 - `.config/dotfiles/` (this README + `bootstrap.sh`)
 
 ## What lives in its own repo (cloned by bootstrap)
@@ -18,26 +18,40 @@ no symlinks.
 - zsh plugins / TPM / yazi packages → installed, not vendored
 
 ## Set up a new machine
-```sh
-# 1. Xcode CLT + Homebrew
-xcode-select --install
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+`bootstrap.sh` auto-detects macOS vs Linux — you only need `git` + the bare repo first.
 
-# 2. Clone the bare repo
+**macOS** — Xcode CLT provides git:
+```sh
+xcode-select --install
+```
+**Ubuntu/Linux** — install git:
+```sh
+sudo apt-get update && sudo apt-get install -y git
+```
+
+Then, on **both**:
+```sh
+# Clone the bare repo
 git clone --bare https://github.com/filipurminsky/dotfiles.git "$HOME/.dotfiles"
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 
-# 3. Check out the files into $HOME
+# Check out the files into $HOME
 dotfiles checkout
-#    If it errors about existing files (e.g. a default ~/.zshrc), back them up:
-#      dotfiles checkout 2>&1 | grep -E '^\s' | awk '{print $1}' | \
-#        xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname {}); mv {} ~/.dotfiles-backup/{}'
-#    then re-run: dotfiles checkout
+#   If it errors about existing files (e.g. a default ~/.zshrc), back them up:
+#     dotfiles checkout 2>&1 | grep -E '^\s' | awk '{print $1}' | \
+#       xargs -I{} sh -c 'mkdir -p ~/.dotfiles-backup/$(dirname {}); mv {} ~/.dotfiles-backup/{}'
+#   then re-run: dotfiles checkout
 dotfiles config status.showUntrackedFiles no
 
-# 4. Run the installer (brew bundle, OMZ, plugins, nvim/yazi, TPM, fnm, identity)
+# Run the installer. It auto-detects the OS:
+#   Linux  -> apt prereqs -> Linuxbrew -> brew bundle (Brewfile)
+#   macOS  -> Homebrew -> brew bundle (Brewfile + Brewfile.macos casks/fonts)
+# then OMZ, zsh plugins, nvim/yazi, TPM, fnm, optional zsh login shell, git identity.
 ~/.config/dotfiles/bootstrap.sh
 ```
+
+> On a headless remote (Ubuntu server), GUI apps/fonts are skipped — Nerd Font
+> glyphs render in your **local** terminal over SSH, so the prompt/icons still work.
 
 ## Day-to-day
 Use the `dotfiles` alias like `git`:

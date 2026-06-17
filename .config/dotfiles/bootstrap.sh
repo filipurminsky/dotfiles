@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap a fresh macOS machine from the dotfiles repo.
+# Bootstrap a fresh macOS or Ubuntu/Linux machine from the dotfiles repo.
 #
 # Run AFTER the bare dotfiles repo has been checked out into $HOME
 # (see README.md for the checkout steps). Idempotent: safe to re-run.
@@ -7,21 +7,34 @@ set -euo pipefail
 
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.config/zsh}"
 GH_USER="filipurminsky"
+OS="$(uname -s)"   # Darwin | Linux
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
-# 1. Homebrew ---------------------------------------------------------------
+# 1. Homebrew (+ Linux build prerequisites) ---------------------------------
+if [ "$OS" = "Linux" ]; then
+  info "Installing Linuxbrew prerequisites via apt"
+  sudo apt-get update
+  sudo apt-get install -y build-essential procps curl file git
+fi
 if ! have brew; then
   info "Installing Homebrew"
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
+# Put brew on PATH for the rest of this script (prefix differs by OS/arch).
+for _b in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.linuxbrew"; do
+  [ -x "$_b/bin/brew" ] && eval "$("$_b/bin/brew" shellenv)" && break
+done
 
 # 2. Brew packages ----------------------------------------------------------
 if [ -f "$HOME/Brewfile" ]; then
-  info "Installing packages from ~/Brewfile"
+  info "Installing cross-platform packages from ~/Brewfile"
   brew bundle --file="$HOME/Brewfile"
+fi
+if [ "$OS" = "Darwin" ] && [ -f "$HOME/Brewfile.macos" ]; then
+  info "Installing macOS-only packages from ~/Brewfile.macos"
+  brew bundle --file="$HOME/Brewfile.macos"
 fi
 
 # 3. Oh My Zsh --------------------------------------------------------------
@@ -83,7 +96,17 @@ if [ ! -d "$HOME/.sdkman" ]; then
   [ "${a:-N}" = "y" ] && curl -s "https://get.sdkman.io" | bash
 fi
 
-# 10. Machine-local git identity -------------------------------------------
+# 10. Default login shell -> zsh (servers default to bash) ------------------
+ZSH_BIN="$(command -v zsh || true)"
+if [ -n "$ZSH_BIN" ] && [ "${SHELL:-}" != "$ZSH_BIN" ]; then
+  read -r -p "Set zsh ($ZSH_BIN) as your login shell? [y/N] " a
+  if [ "${a:-N}" = "y" ]; then
+    grep -qx "$ZSH_BIN" /etc/shells || echo "$ZSH_BIN" | sudo tee -a /etc/shells >/dev/null
+    chsh -s "$ZSH_BIN"
+  fi
+fi
+
+# 11. Machine-local git identity -------------------------------------------
 if [ ! -f "$HOME/.gitconfig.local" ]; then
   info "Creating ~/.gitconfig.local (git identity — not tracked)"
   read -r -p "  git user.name:  " name
