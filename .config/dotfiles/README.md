@@ -14,7 +14,7 @@ no symlinks.
 
 ## What lives in its own repo (cloned by bootstrap)
 - Neovim → [`nvim-config`](https://github.com/filipurminsky/nvim-config) → `~/.config/nvim`
-- Yazi   → `yazi-config` (private) → `~/.config/yazi`
+- Yazi   → [`yazi-config`](https://github.com/filipurminsky/yazi-config) (public) → `~/.config/yazi`
 - zsh plugins / TPM / yazi packages → installed, not vendored
 
 ## Set up a new machine
