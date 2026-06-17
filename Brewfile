@@ -7,6 +7,8 @@ brew "atuin"
 brew "bash"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Resource monitor. C++ version and continuation of bashtop and bpytop
+brew "btop"
 # Prevent cloud misconfigurations during build-time for IaC tools
 brew "checkov"
 # Test your configuration files using Open Policy Agent
@@ -47,12 +49,16 @@ brew "jq"
 brew "kind"
 # Static analysis tool for Kubernetes YAML files and Helm charts
 brew "kube-linter"
+# Colorize your kubectl output
+brew "kubecolor"
 # FAST Kubernetes manifests validator, with support for Custom Resources!
 brew "kubeconform"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
 # Template-free customization of Kubernetes YAML manifests
 brew "kustomize"
+# Lazier way to manage everything docker
+brew "lazydocker"
 # Simple terminal UI for git commands
 brew "lazygit"
 # Unified display of technical and tag data for audio/video
@@ -77,6 +83,8 @@ brew "ruff"
 brew "sevenzip"
 # Editor of encrypted files
 brew "sops"
+# Tail multiple Kubernetes pods & their containers
+brew "stern"
 # Terraform version manager inspired by rbenv
 brew "tfenv"
 # Terminal multiplexer

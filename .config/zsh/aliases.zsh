@@ -19,6 +19,13 @@ alias cat='bat --paging=never'
 # --- lazygit ---------------------------------------------------------------
 alias lg='lazygit'
 
+# --- kubecolor (colorized kubectl) -----------------------------------------
+# kubecolor wraps the real kubectl, so these are safe; it calls the kubectl
+# binary directly (aliases don't apply there, so no loop).
+alias kubectl='kubecolor'
+alias k='kubecolor'
+compdef kubecolor=kubectl   # kubectl completions for kubecolor (and k/kubectl aliases)
+
 # --- dotfiles (bare repo: git db in ~/.dotfiles, work-tree is $HOME) --------
 # Use like git: `dotfiles status`, `dotfiles add ~/.zshrc`, `dotfiles push`.
 alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
