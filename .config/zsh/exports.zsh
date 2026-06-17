@@ -4,6 +4,14 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+# Ensure a UTF-8 locale. macOS terminals set LANG already (this no-ops there),
+# but a fresh Linux box / `docker exec` / bare SSH leaves it unset → LC_CTYPE
+# falls back to POSIX, which makes Neovim/yazi/tmux drop Nerd Font icons. Default
+# to C.UTF-8 (built into Ubuntu, no locale-gen needed) when nothing is set.
+if [[ -z "$LANG" && -z "$LC_ALL" && -z "$LC_CTYPE" ]]; then
+  export LANG="C.UTF-8"
+fi
+
 # Read man pages in nvim (full vim navigation/search/syntax via :Man).
 export MANPAGER='nvim +Man!'
 
