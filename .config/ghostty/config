@@ -1,0 +1,8 @@
+theme = Catppuccin Mocha
+font-family = "Meslo LG M for Powerline"
+
+# Vim-style scrollback navigation
+keybind = ctrl+shift+b=scroll_page_up
+keybind = ctrl+shift+f=scroll_page_down
+keybind = ctrl+shift+u=scroll_page_fractional:-0.5
+keybind = ctrl+shift+d=scroll_page_fractional:0.5
