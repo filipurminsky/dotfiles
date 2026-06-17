@@ -15,6 +15,8 @@ brew "checkov"
 brew "conftest"
 # Tool for interacting with remote images and registries
 brew "crane"
+# Tool for exploring each layer in a docker image
+brew "dive"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find
@@ -103,6 +105,8 @@ brew "trivy"
 brew "uv"
 # Blazing fast terminal file manager written in Rust, based on async I/O
 brew "yazi", args: ["HEAD"]
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
+brew "yq"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # Kubernetes CLI To Manage Your Clusters In Style!
