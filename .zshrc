@@ -23,7 +23,12 @@ DEFAULT_USER=$(whoami)
 
 # Which plugins to load (standard plugins in $ZSH/plugins/, custom in
 # $ZSH_CUSTOM/plugins/). Add wisely — too many slow down shell startup.
-plugins=(zsh-syntax-highlighting zsh-autosuggestions git aws kubectl docker terraform zsh-vi-mode)
+#
+# zsh-vi-mode is skipped inside Neovim's terminal ($NVIM is set there): nvim
+# already provides modal editing for the terminal buffer, and two vi layers
+# fight over Esc. In a real terminal / tmux it loads normally.
+plugins=(zsh-syntax-highlighting zsh-autosuggestions git aws kubectl docker terraform)
+[[ -z $NVIM ]] && plugins+=(zsh-vi-mode)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -36,6 +41,7 @@ source $ZSH/oh-my-zsh.sh
 # agnoster segment. Drawn via a wrapper around build_prompt so we don't
 # edit the theme file (survives Oh My Zsh updates).
 prompt_vi_mode() {
+  [[ -n $ZVM_MODE ]] || return   # no segment when zsh-vi-mode isn't loaded (inside nvim)
   local char bg
   case $ZVM_MODE in
     $ZVM_MODE_NORMAL)      char='n'; bg='blue'   ;;
@@ -70,23 +76,28 @@ build_prompt() {
 # Redraw the prompt the moment the mode changes.
 function zvm_after_select_vi_mode() { zle reset-prompt; }
 
-# Key bindings that must run AFTER zsh-vi-mode applies its keymaps (it does so
-# after .zshrc loads, so anything binding the same keys has to wait for this
-# hook or it gets clobbered).
-function zvm_after_init() {
-  # Restore Ctrl+U to delete the whole line in insert mode.
-  zvm_bindkey viins '^U' kill-whole-line
-
+# fzf + atuin key tools. Defined once, initialized differently depending on
+# whether zsh-vi-mode is loaded.
+_init_keytools() {
   # fzf completion + key bindings (Ctrl-T files, Alt-C cd, Ctrl-R history).
   # Sourced first so atuin can override Ctrl-R below.
   source <(fzf --zsh)
-
   # atuin: SQLite-backed history search. Owns Ctrl-R (overrides fzf's).
   # --disable-up-arrow keeps Up as plain previous-command (predictable in vi).
   eval "$(atuin init zsh --disable-up-arrow)"
-
-  # atuin binds Ctrl-R in BOTH viins and vicmd, which clobbers vi's redo in
-  # command mode. Give command-mode Ctrl-R back to redo; atuin still owns it
-  # in insert mode for history search.
-  bindkey -M vicmd '^R' redo
 }
+
+if [[ -z $NVIM ]]; then
+  # zsh-vi-mode is loaded: its keymaps are applied AFTER .zshrc, so key setup
+  # must run in its post-init hook or it gets clobbered.
+  function zvm_after_init() {
+    zvm_bindkey viins '^U' kill-whole-line   # restore Ctrl+U = kill whole line
+    _init_keytools
+    # atuin binds Ctrl-R in BOTH viins and vicmd, clobbering vi's redo in
+    # command mode. Give command-mode Ctrl-R back to redo (atuin keeps insert).
+    bindkey -M vicmd '^R' redo
+  }
+else
+  # Inside Neovim's terminal: no zsh-vi-mode, so init fzf/atuin directly now.
+  _init_keytools
+fi
