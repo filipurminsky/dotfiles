@@ -48,6 +48,12 @@ prompt_vi_mode() {
   prompt_segment "$bg" black "$char"
 }
 
+# Date/time segment. Defined here (not in the theme file) so it survives Oh My
+# Zsh updates and is tracked in the dotfiles repo.
+prompt_time() {
+  prompt_segment black cyan "%D{%Y-%m-%d %H:%M:%S}"
+}
+
 # Wrap agnoster's build_prompt, preserving $? so the error/status segment
 # still works ( exit $ret restores the exit code build_prompt reads).
 if (( ! ${+functions[_agnoster_orig_build_prompt]} )); then
@@ -56,6 +62,7 @@ fi
 build_prompt() {
   local ret=$?
   prompt_vi_mode
+  prompt_time
   ( exit $ret )
   _agnoster_orig_build_prompt
 }
