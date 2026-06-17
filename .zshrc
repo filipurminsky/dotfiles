@@ -60,6 +60,23 @@ prompt_time() {
   prompt_segment black cyan "%D{%Y-%m-%d %H:%M:%S}"
 }
 
+# "Where am I" context: replace agnoster's subtle user@host with a clear,
+# distinctly-colored segment for Docker containers and SSH sessions. Nothing
+# shows in a normal local shell. agnoster already calls prompt_context inside
+# build_prompt, so overriding it here (after the theme) is all that's needed.
+#   - container name isn't visible from inside Docker; we show $HOST (the
+#     container hostname/ID) unless $PROMPT_BOX_NAME is set for a friendly label.
+prompt_context() {
+  if [[ -f /.dockerenv || -f /run/.containerenv ]]; then
+    prompt_segment blue white " ${PROMPT_BOX_NAME:-$HOST}"
+  fi
+  if [[ -n "$SSH_CONNECTION" || -n "$SSH_TTY" ]]; then
+    prompt_segment yellow black " %n@%m"
+  elif [[ "$USERNAME" != "$DEFAULT_USER" ]]; then
+    prompt_segment "${AGNOSTER_CONTEXT_BG:-black}" "${AGNOSTER_CONTEXT_FG:-default}" "%n@%m"
+  fi
+}
+
 # Wrap agnoster's build_prompt, preserving $? so the error/status segment
 # still works ( exit $ret restores the exit code build_prompt reads).
 if (( ! ${+functions[_agnoster_orig_build_prompt]} )); then
