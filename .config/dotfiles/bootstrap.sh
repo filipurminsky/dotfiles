@@ -3,6 +3,12 @@
 #
 # Run AFTER the bare dotfiles repo has been checked out into $HOME
 # (see README.md for the checkout steps). Idempotent: safe to re-run.
+#
+# Usage: bootstrap.sh [--mode=light|full]   (default: full)
+#   full   the complete workstation: full Brewfile (+ macOS casks/fonts),
+#          Node via fnm, optional SDKMAN, etc.
+#   light  editing/navigation core only: zsh+plugins, tmux+plugins,
+#          neovim+plugins, yazi, ripgrep, fzf, zoxide, fd. No Node/SDKMAN/GUI.
 set -euo pipefail
 
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.config/zsh}"
@@ -17,6 +23,20 @@ have() { command -v "$1" >/dev/null 2>&1; }
 MANIFEST="$HOME/.local/state/dotfiles/bootstrap.manifest"
 mkdir -p "$(dirname "$MANIFEST")"
 record() { grep -qxF "$1" "$MANIFEST" 2>/dev/null || echo "$1" >> "$MANIFEST"; }
+
+# Install profile: full (default) or light. See header for what each covers.
+MODE=full
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --mode=*) MODE="${1#*=}" ;;
+    --mode)   MODE="${2:?--mode needs a value}"; shift ;;
+    -h|--help) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "unknown arg: $1 (try --help)" >&2; exit 2 ;;
+  esac
+  shift
+done
+case "$MODE" in light|full) ;; *) echo "invalid --mode: $MODE (light|full)" >&2; exit 2 ;; esac
+info "Bootstrap mode: $MODE"
 
 # 1. Homebrew (+ Linux build prerequisites) ---------------------------------
 if [ "$OS" = "Linux" ]; then
@@ -38,13 +58,23 @@ for _b in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.linuxbrew"
 done
 
 # 2. Brew packages ----------------------------------------------------------
-if [ -f "$HOME/Brewfile" ]; then
-  info "Installing cross-platform packages from ~/Brewfile"
-  brew bundle --file="$HOME/Brewfile"
-fi
-if [ "$OS" = "Darwin" ] && [ -f "$HOME/Brewfile.macos" ]; then
-  info "Installing macOS-only packages from ~/Brewfile.macos"
-  brew bundle --file="$HOME/Brewfile.macos"
+if [ "$MODE" = full ]; then
+  if [ -f "$HOME/Brewfile" ]; then
+    info "Installing cross-platform packages from ~/Brewfile"
+    brew bundle --file="$HOME/Brewfile"
+  fi
+  if [ "$OS" = "Darwin" ] && [ -f "$HOME/Brewfile.macos" ]; then
+    info "Installing macOS-only packages from ~/Brewfile.macos"
+    brew bundle --file="$HOME/Brewfile.macos"
+  fi
+else
+  # light: editing/navigation core only. git is system-provided (Xcode CLT on
+  # macOS, apt prereqs on Linux); zsh on macOS is system-provided but harmless
+  # to install fresh, and is needed on Linux.
+  info "Installing light package set"
+  LIGHT_PKGS=(zsh tmux neovim yazi ripgrep fzf zoxide fd)
+  for p in "${LIGHT_PKGS[@]}"; do have "$p" || record "brewpkg:$p"; done
+  brew install "${LIGHT_PKGS[@]}"
 fi
 
 # 3. Oh My Zsh --------------------------------------------------------------
@@ -98,8 +128,8 @@ tmux new-session -d -s __tpm_install 2>/dev/null || true
 "$TPM/bin/install_plugins" >/dev/null 2>&1 || true
 tmux kill-session -t __tpm_install 2>/dev/null || true
 
-# 8. Node versions via fnm --------------------------------------------------
-if have fnm; then
+# 8. Node versions via fnm (full only) --------------------------------------
+if [ "$MODE" = full ] && have fnm; then
   info "Installing Node versions via fnm"
   eval "$(fnm env)"
   fnm install 20.20.2 || true
@@ -107,8 +137,8 @@ if have fnm; then
   fnm default 24.15.0 || true
 fi
 
-# 9. SDKMAN (optional) ------------------------------------------------------
-if [ ! -d "$HOME/.sdkman" ]; then
+# 9. SDKMAN (optional, full only) -------------------------------------------
+if [ "$MODE" = full ] && [ ! -d "$HOME/.sdkman" ]; then
   read -r -p "Install SDKMAN (Java/Gradle/Maven)? [y/N] " a
   if [ "${a:-N}" = "y" ]; then record "sdkman"; curl -s "https://get.sdkman.io" | bash; fi
 fi

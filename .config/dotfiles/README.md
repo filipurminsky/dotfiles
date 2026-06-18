@@ -50,6 +50,17 @@ dotfiles config status.showUntrackedFiles no
 ~/.config/dotfiles/bootstrap.sh
 ```
 
+### Light mode
+For lightweight boxes (servers, containers, throwaway VMs) where you only want
+the editing/navigation core:
+```sh
+~/.config/dotfiles/bootstrap.sh --mode=light
+```
+Installs **zsh + plugins, tmux + plugins, neovim + plugins, yazi, ripgrep, fzf,
+zoxide, fd** — and skips the full Brewfile, GUI casks/fonts, Node (fnm), and
+SDKMAN. neovim plugins/LSPs install on first launch. Footprint: ~0.4 GB after
+bootstrap, growing as nvim's Mason populates on use.
+
 > On a headless remote (Ubuntu server), GUI apps/fonts are skipped — Nerd Font
 > glyphs render in your **local** terminal over SSH, so the prompt/icons still work.
 
