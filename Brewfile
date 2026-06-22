@@ -93,6 +93,8 @@ brew "stern"
 brew "tfenv"
 # Terminal multiplexer
 brew "tmux"
+# Manage tmux workspaces from YAML/JSON session definitions
+brew "tmuxp"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Parser generator tool
