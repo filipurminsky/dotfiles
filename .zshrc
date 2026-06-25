@@ -30,6 +30,14 @@ DEFAULT_USER=$(whoami)
 plugins=(zsh-syntax-highlighting zsh-autosuggestions git aws kubectl docker terraform)
 [[ -z $NVIM ]] && plugins+=(zsh-vi-mode)
 
+# zsh-vi-mode treats a lone Esc as "exit insert mode" once ZVM_ESCAPE_KEYTIMEOUT
+# elapses (default 0.03s) -- far too short to also type Esc+. (insert-last-word,
+# bound in the post-init hook below), so that chord never registers. Widen the
+# window so Esc-prefixed insert bindings are reachable. Trade-off: a bare
+# Esc->normal now waits this long. 0.2s balances both; raise toward 0.3 if Esc+.
+# gets missed, lower for snappier mode switches.
+ZVM_ESCAPE_KEYTIMEOUT=0.2
+
 source $ZSH/oh-my-zsh.sh
 
 # --- Theme-dependent prompt config ----------------------------------------
@@ -109,6 +117,12 @@ if [[ -z $NVIM ]]; then
   # must run in its post-init hook or it gets clobbered.
   function zvm_after_init() {
     zvm_bindkey viins '^U' kill-whole-line   # restore Ctrl+U = kill whole line
+    # Esc+. = insert last word of previous command (readline's yank-last-arg);
+    # repeat to cycle through earlier commands. insert-last-word stays in insert
+    # mode and inserts only the last word. Relies on the widened
+    # ZVM_ESCAPE_KEYTIMEOUT above so the '.' is read before zsh-vi-mode decides
+    # the lone Esc meant "exit insert mode".
+    zvm_bindkey viins '^[.' insert-last-word
     _init_keytools
     # atuin binds Ctrl-R in BOTH viins and vicmd, clobbering vi's redo in
     # command mode. Give command-mode Ctrl-R back to redo (atuin keeps insert).
