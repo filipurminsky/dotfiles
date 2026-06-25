@@ -1,5 +1,7 @@
 theme = Catppuccin Mocha
-font-family = "Meslo LG M for Powerline"
+# Nerd Font Mono variant (NFM): full icon set, glyphs constrained to one cell
+# for clean alignment in yazi/nvim. Installed via the JetBrainsMono Nerd Font.
+font-family = "JetBrainsMono NFM"
 
 # Vim-style scrollback navigation
 keybind = ctrl+shift+b=scroll_page_up
