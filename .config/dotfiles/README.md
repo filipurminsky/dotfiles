@@ -89,3 +89,12 @@ dotfiles push
 - tmux plugins: after first launch, press `prefix + I` if `bootstrap.sh`'s TPM
   install didn't run.
 - atuin history: `atuin import auto`, then `atuin login` for cross-machine sync.
+- aerc (email): `aerc.conf` + `binds.conf` are tracked; `~/.config/aerc/accounts.conf`
+  is **never** tracked (account details out of this public repo). On a new machine,
+  recreate it and store the Gmail app password in the keychain — aerc reads it via
+  `source-cred-cmd`, no plaintext on disk:
+  ```sh
+  security add-generic-password -U -a f.urminsky@gmail.com -s aerc-gmail -w 'APP_PW'
+  ```
+  On Linux there's no `security`; swap the `*-cred-cmd` lines to a local secret
+  store (e.g. `pass show aerc-gmail`).
