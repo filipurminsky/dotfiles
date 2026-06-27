@@ -4,6 +4,11 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+# Pin the XDG config dir to ~/.config (the spec default) so tools that would
+# otherwise use macOS-native dirs read from where this repo tracks them. e.g.
+# aerc on macOS defaults to ~/Library/Preferences/aerc without this.
+export XDG_CONFIG_HOME="$HOME/.config"
+
 # Ensure a UTF-8 locale. macOS terminals set LANG already (this no-ops there),
 # but a fresh Linux box / `docker exec` / bare SSH leaves it unset → LC_CTYPE
 # falls back to POSIX, which makes Neovim/yazi/tmux drop Nerd Font icons. Default
