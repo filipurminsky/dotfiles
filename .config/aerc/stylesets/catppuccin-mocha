@@ -7,6 +7,7 @@
 *.normal=true
 
 default.fg=#cdd6f4
+default.bg=#1e1e2e
 
 error.fg=#f38ba8
 warning.fg=#fab387
@@ -26,11 +27,14 @@ msglist_flagged.fg=#f9e2af
 msglist_flagged.bold=true
 msglist_result.fg=#89b4fa
 msglist_result.bold=true
+# Selected row: Mauve accent (base-colored text on mauve) so the cursor pops.
 msglist_*.selected.bold=true
-msglist_*.selected.bg=#313244
+msglist_*.selected.fg=#1e1e2e
+msglist_*.selected.bg=#cba6f7
 
 dirlist_*.selected.bold=true
-dirlist_*.selected.bg=#313244
+dirlist_*.selected.fg=#1e1e2e
+dirlist_*.selected.bg=#cba6f7
 
 statusline_default.fg=#9399b2
 statusline_default.bg=#313244
