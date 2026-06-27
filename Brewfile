@@ -1,6 +1,8 @@
 tap "argoproj/tap"
 tap "craftamap/tap"
 tap "derailed/k9s"
+# Email client for your terminal
+brew "aerc"
 # Improved shell history for zsh, bash, fish and nushell
 brew "atuin"
 # Bourne-Again SHell, a UNIX command interpreter
@@ -103,6 +105,8 @@ brew "tree-sitter-cli"
 brew "trivy"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
+# Pager / text-based web browser (renders HTML email in aerc)
+brew "w3m"
 # Blazing fast terminal file manager written in Rust, based on async I/O
 brew "yazi", args: ["HEAD"]
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
