@@ -32,6 +32,14 @@ msglist_*.selected.bold=true
 msglist_*.selected.fg=#1e1e2e
 msglist_*.selected.bg=#cba6f7
 
+# Marked rows (multi-select via Space / v): Yellow bg so marks stand out;
+# Peach when a marked row is also the cursor.
+msglist_marked.fg=#1e1e2e
+msglist_marked.bg=#f9e2af
+msglist_marked.bold=true
+msglist_marked.selected.fg=#1e1e2e
+msglist_marked.selected.bg=#fab387
+
 dirlist_*.selected.bold=true
 dirlist_*.selected.fg=#1e1e2e
 dirlist_*.selected.bg=#cba6f7
