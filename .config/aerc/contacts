@@ -1,0 +1,43 @@
+#!/bin/sh
+# Lightweight aerc address book backed by a TSV file (address<TAB>name).
+# The data file is untracked (personal contacts); this script is tracked.
+#
+#   contacts query "<search>"        -> mutt-style results for address-book-cmd
+#   contacts add   "<addr>" "<name>" -> upsert an entry (used by mail-received)
+#
+# aerc's address-book-cmd protocol: first output line is ignored (a status
+# line), then one "address<TAB>name" per match.
+
+DB="${XDG_CONFIG_HOME:-$HOME/.config}/aerc/addressbook.tsv"
+TAB=$(printf '\t')
+
+mkdir -p "$(dirname "$DB")"
+[ -f "$DB" ] || : > "$DB"
+
+case "$1" in
+  query)
+    echo "Searching address book..."        # ignored header line
+    q=$2
+    if [ -n "$q" ]; then
+      grep -iF -- "$q" "$DB" 2>/dev/null
+    else
+      cat "$DB"
+    fi
+    ;;
+  add)
+    addr=$(printf '%s' "$2" | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+    name=$(printf '%s' "$3" | tr '\t\n' '  ')
+    # must look like an email and not already be present
+    case "$addr" in
+      *@*.*) ;;
+      *) exit 0 ;;
+    esac
+    if ! grep -qiF "${addr}${TAB}" "$DB" 2>/dev/null; then
+      printf '%s\t%s\n' "$addr" "$name" >> "$DB"
+    fi
+    ;;
+  *)
+    echo "usage: contacts query <search> | add <addr> <name>" >&2
+    exit 2
+    ;;
+esac

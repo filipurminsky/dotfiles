@@ -1,0 +1,27 @@
+#!/bin/sh
+# aerc mail-received hook. aerc exports: AERC_ACCOUNT, AERC_FOLDER,
+# AERC_FROM_NAME, AERC_FROM_ADDRESS, AERC_SUBJECT, AERC_MESSAGE_ID, ...
+#
+# 1) Harvest the sender into the local address book (powers tab-completion).
+# 2) Pop a macOS desktop notification for new INBOX mail.
+
+DIR="${XDG_CONFIG_HOME:-$HOME/.config}/aerc"
+
+# --- 1. harvest sender -------------------------------------------------------
+[ -n "$AERC_FROM_ADDRESS" ] && "$DIR/contacts" add "$AERC_FROM_ADDRESS" "$AERC_FROM_NAME"
+
+# --- 2. notify (INBOX only, to cut noise) ------------------------------------
+case "$AERC_FOLDER" in
+  INBOX|Inbox)
+    # Strip quotes/backslashes so the values can't break the AppleScript string.
+    title=$(printf '%s' "${AERC_FROM_NAME:-$AERC_FROM_ADDRESS}" | tr -d '"\\')
+    body=$(printf '%s' "$AERC_SUBJECT" | tr -d '"\\')
+    if command -v terminal-notifier >/dev/null 2>&1; then
+      terminal-notifier -title "aerc: $title" -message "$body" -group aerc
+    elif command -v osascript >/dev/null 2>&1; then
+      osascript -e "display notification \"$body\" with title \"aerc: $title\""
+    fi
+    ;;
+esac
+
+exit 0
