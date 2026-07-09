@@ -19,9 +19,14 @@ tab.selected.fg=#cdd6f4
 tab.selected.bg=#1e1e2e
 tab.selected.bold=true
 
-border.fg=#11111b
+# Surface1 — subtle but visible so pane/sidebar/preview dividers read cleanly.
+border.fg=#45475a
 border.bold=true
 
+# Visual hierarchy: already-read mail recedes to a muted grey (overlay1), unread
+# stays at full-strength text and bold so it pops. Flagged/result override below.
+msglist_default.fg=#7f849c
+msglist_unread.fg=#cdd6f4
 msglist_unread.bold=true
 msglist_flagged.fg=#f9e2af
 msglist_flagged.bold=true
