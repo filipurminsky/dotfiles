@@ -9,6 +9,8 @@ brew "atuin"
 brew "bash"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Secure and free password manager for all of your devices
+brew "bitwarden-cli"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
 # Prevent cloud misconfigurations during build-time for IaC tools
@@ -75,6 +77,8 @@ brew "mysql@8.4", link: true
 brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# OpenBSD freely-licensed SSH connectivity tools
+brew "openssh"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # PDF rendering library (based on the xpdf-3.0 code base)
@@ -97,6 +101,8 @@ brew "tfenv"
 brew "tmux"
 # Manage tmux workspaces from YAML/JSON session definitions
 brew "tmuxp"
+# Plugin manager for tmux
+brew "tpm"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Parser generator tool

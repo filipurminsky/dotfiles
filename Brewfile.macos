@@ -1,6 +1,11 @@
 # macOS-only packages (GUI apps + fonts). Bundled by bootstrap.sh only on Darwin.
 # The cross-platform CLI toolchain lives in ~/Brewfile (used on both macOS and Linux).
 
+# Paste PNG into files
+brew "pngpaste"
+# Send macOS User Notifications from the command-line
+brew "terminal-notifier"
+
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
 cask "font-jetbrains-mono-nerd-font"
@@ -9,5 +14,7 @@ cask "font-symbols-only-nerd-font"
 cask "gemini"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Keyboard customiser
+cask "karabiner-elements"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
