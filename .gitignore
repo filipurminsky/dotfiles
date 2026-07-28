@@ -22,8 +22,8 @@
 .config/filezilla/
 
 # ── Claude Code: track hand-written config, exclude per-machine state ─
-# settings.json and statusline-command.sh ARE tracked; everything below is
-# session state, caches and machine-local overrides.
+# settings.json, keybindings.json and statusline-command.sh ARE tracked;
+# everything below is session state, caches and machine-local overrides.
 .claude/settings.local.json
 .claude/history.jsonl
 .claude/.last-cleanup
