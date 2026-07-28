@@ -1,0 +1,65 @@
+set selection-clipboard clipboard
+
+# --- reading ---
+set adjust-open "width"
+set scroll-step 50
+set scroll-full-overlap 0.05
+set scroll-page-aware true
+set page-h-padding 1
+set page-v-padding 1
+set vertical-center true
+set database sqlite
+set continuous-hist-save true
+
+# --- light mode (catppuccin latte) ---
+set recolor true
+set recolor-keephue true
+set recolor-reverse-video true
+set recolor-lightcolor "#eff1f5"
+set recolor-darkcolor  "#4c4f69"
+set default-bg "#e6e9ef"
+set default-fg "#4c4f69"
+
+# --- ui ---
+set window-width  1600
+set window-height 1000
+set guioptions "sv"
+set statusbar-basename true
+set statusbar-home-tilde true
+set window-title-basename true
+set window-title-page true
+set font "monospace normal 11"
+set render-loading false
+set incremental-search true
+
+set statusbar-bg   "#dce0e8"
+set statusbar-fg   "#4c4f69"
+set inputbar-bg    "#eff1f5"
+set inputbar-fg    "#4c4f69"
+set notification-bg          "#eff1f5"
+set notification-fg          "#4c4f69"
+set notification-error-bg    "#eff1f5"
+set notification-error-fg    "#d20f39"
+set notification-warning-bg  "#eff1f5"
+set notification-warning-fg  "#df8e1d"
+set completion-bg            "#ccd0da"
+set completion-fg            "#4c4f69"
+set completion-group-bg      "#dce0e8"
+set completion-group-fg      "#1e66f5"
+set completion-highlight-bg  "#acb0be"
+set completion-highlight-fg  "#4c4f69"
+
+# --- search highlight ---
+set highlight-color        "#df8e1d"
+set highlight-active-color "#d20f39"
+
+# --- keys ---
+map u scroll half-up
+map d scroll half-down
+map D toggle_page_mode
+map r reload
+map R rotate
+map p print
+map i recolor
+map <C-i> zoom in
+map <C-o> zoom out
