@@ -1,0 +1,67 @@
+# Ignore rules for the bare dotfiles repo (work tree = $HOME).
+#
+# Tracked deliberately, unlike .dotfiles/info/exclude, which is repo-local and
+# does not survive a fresh clone — exactly when a stray `git add -A` is most
+# likely. Anything naming a person, employer or domain stays in info/exclude
+# instead: this file is published to a PUBLIC repo, so its patterns are public.
+#
+# Default-deny is impractical here ($HOME is mostly not config), so this is a
+# targeted deny-list. Add new tools as you adopt them.
+
+# ── Credentials in tool configs — never track ────────────────────────
+# lazysql embeds DB passwords directly in the connection URL
+.config/lazysql/config.toml
+.config/lazysql/history/
+# fabric API keys
+.config/fabric/.env
+# gh OAuth token (config.yml alongside it is safe)
+.config/gh/hosts.yml
+# Copilot auth database
+.config/github-copilot/
+# FileZilla stores site passwords in near-plaintext
+.config/filezilla/
+
+# ── Claude Code: track hand-written config, exclude per-machine state ─
+# settings.json and statusline-command.sh ARE tracked; everything below is
+# session state, caches and machine-local overrides.
+.claude/settings.local.json
+.claude/history.jsonl
+.claude/.last-cleanup
+.claude/.last-update-result.json
+.claude/backups/
+.claude/cache/
+.claude/daemon/
+.claude/downloads/
+.claude/file-history/
+.claude/ide/
+.claude/jobs/
+.claude/paste-cache/
+.claude/plans/
+.claude/plugins/
+.claude/projects/
+.claude/session-env/
+.claude/sessions/
+.claude/shell-snapshots/
+.claude/tasks/
+.claude/telemetry/
+
+# ── Machine state / vendored payloads, not configuration ─────────────
+# The bare repo lives inside its own work tree; never track its metadata.
+.dotfiles/
+.config/karabiner/automatic_backups/
+.config/tfenv/versions/
+.config/tfenv/version
+.config/tfenv/version.prev
+.config/iterm2/AppSupport/
+.config/homebrew/trust.json
+.config/homebrew/trust.json.lock
+.config/cagent/.cagent_first_run
+.config/cagent/user-uuid
+__pycache__/
+*.pyc
+
+# ── Cloned by bootstrap.sh, not vendored here ────────────────────────
+.config/zsh/plugins/
+.config/tmux/plugins/
+.config/nvim/
+.config/yazi/
