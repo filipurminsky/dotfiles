@@ -11,6 +11,7 @@
 	side-by-side = false
 [merge]
 	conflictStyle = zdiff3
+	tool = nvimdiff
 [init]
 	defaultBranch = main
 [pull]
@@ -26,7 +27,15 @@
 	enabled = true
 [diff]
 	algorithm = histogram
+	tool = nvimdiff
 [branch]
 	sort = -committerdate
 [column]
 	ui = auto
+[mergetool]
+	prompt = false
+	keepBackup = false
+[difftool]
+	prompt = false
+[alias]
+	conflicts = !nvim -c DiffviewOpen

@@ -1,6 +1,7 @@
 tap "argoproj/tap"
 tap "craftamap/tap"
 tap "derailed/k9s"
+tap "homebrew-zathura/zathura"
 # Email client for your terminal
 brew "aerc"
 # Improved shell history for zsh, bash, fish and nushell
@@ -23,6 +24,8 @@ brew "crane"
 brew "dive"
 # Modern, maintained replacement for ls
 brew "eza"
+# Open-source framework for augmenting humans using AI
+brew "fabric-ai"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
 # Play, record, convert, and stream select audio and video codecs
@@ -121,4 +124,14 @@ brew "yq"
 brew "zoxide"
 # Kubernetes CLI To Manage Your Clusters In Style!
 brew "derailed/k9s/k9s", trusted: true
+# PDF viewer
+brew "homebrew-zathura/zathura/zathura"
+# Comic book plugin for zathura
+brew "homebrew-zathura/zathura/zathura-cb"
+# DJVU plugin for zathura
+brew "homebrew-zathura/zathura/zathura-djvu"
+# MuPDF backend plugin for zathura
+brew "homebrew-zathura/zathura/zathura-pdf-mupdf"
+# Postscript backend plugin for zathura
+brew "homebrew-zathura/zathura/zathura-ps"
 npm "corepack"

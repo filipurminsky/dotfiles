@@ -1,4 +1,8 @@
 theme = Catppuccin Mocha
+
+# Left Option sends ESC-prefixed sequences so tmux/vim Alt bindings (M-H/M-L)
+# work. Right Option stays a normal macOS modifier for composing áéíóú.
+macos-option-as-alt = left
 # Nerd Font Mono variant (NFM): full icon set, glyphs constrained to one cell
 # for clean alignment in yazi/nvim. Installed via the JetBrainsMono Nerd Font.
 font-family = "JetBrainsMono NFM"

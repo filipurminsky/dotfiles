@@ -132,3 +132,20 @@ else
   # Inside Neovim's terminal: no zsh-vi-mode, so init fzf/atuin directly now.
   _init_keytools
 fi
+
+# Fabric: quick raw question against the LiteLLM/Bedrock endpoint.
+# -r omits temperature/top_p (Bedrock Claude Sonnet 5 rejects them);
+# -s streams; raw_query sends the prompt with no extra system prompt.
+#   Usage:  ?? explain the CAP theorem
+# '??' must be an ALIAS, not a function: a bare ?? command word is a glob and
+# zsh would expand it to 2-char filenames in $PWD (e.g. ~/go -> "go") before
+# ever finding a function. Alias expansion happens before globbing, so it wins;
+# noglob then keeps the question text from being globbed too.
+_fabric_ask() { echo "$*" | fabric -r -sp raw_query; }
+alias -- '??'='noglob _fabric_ask'
+
+# Open a PDF in zathura, detached and focused.
+#   Usage:  pdf report.pdf
+# Shares ~/.local/bin/zathura-open with yazi's opener rule; see that script for
+# why it execs the in-bundle binary and nudges the window to the front.
+alias pdf='zathura-open'

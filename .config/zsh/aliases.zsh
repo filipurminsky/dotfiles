@@ -5,6 +5,7 @@ alias v=nvim
 alias vim=nvim
 alias h='history'
 alias hsi='history | grep -i'
+alias fabric='fabric-ai'
 
 # --- eza (modern ls) -------------------------------------------------------
 alias ls='eza --group-directories-first --icons=auto'
