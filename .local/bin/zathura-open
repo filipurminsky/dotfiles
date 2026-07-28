@@ -1,0 +1,34 @@
+#!/bin/sh
+# Open a document in zathura, detached and brought to the front.
+# Shared by the `pdf` zsh function and yazi's opener rule so the launch
+# quirks below only have to be solved once.
+#
+# Exec the binary INSIDE the .app, not /opt/homebrew/bin/zathura. Same binary,
+# but macOS derives a process's bundle by walking up from the executable path,
+# so the bare one gets CFBundleIdentifier=NULL and a generic exec icon in the
+# Dock, while this one resolves to com.pwmt.zathura and shows the real icon.
+#
+# Still a direct exec rather than `open -a`, which is deliberate: Zathura.app is
+# ad-hoc-signed and fails Gatekeeper, so routing a quarantined download through
+# LaunchServices gets hard-blocked with no "Open Anyway".
+#
+# GTK apps started from a shell don't activate on macOS, so the window would
+# otherwise open behind the terminal - hence the System Events nudge, matched on
+# pid so it can't grab some other zathura window.
+
+ZATHURA=/Applications/Zathura.app/Contents/MacOS/zathura
+[ -x "$ZATHURA" ] || ZATHURA=$(command -v zathura) || {
+	echo "zathura-open: zathura not found" >&2
+	exit 1
+}
+
+"$ZATHURA" "$@" >/dev/null 2>&1 &
+pid=$!
+
+(
+	sleep 0.4
+	osascript -e "tell application \"System Events\" to set frontmost of \
+		(first process whose unix id is $pid) to true" >/dev/null 2>&1
+) &
+
+exit 0

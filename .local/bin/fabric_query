@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Neovim filter: pipe a line/selection through Fabric and replace it with the
+# model's answer, e.g.  :.!fabric_query   or   :'<,'>!fabric_query
+#
+# Must be an executable on PATH (not a shell alias/function): Neovim's :! runs a
+# non-interactive shell that never sources .zshrc, so the `fabric` alias doesn't
+# exist there — call the real binary, fabric-ai.
+#
+#   -r          drop temperature/top_p (Bedrock Claude Sonnet 5 rejects them)
+#   no -s       don't stream, so stdout is the clean answer (no control noise)
+#   raw_query   send stdin as the prompt with no extra system prompt
+exec fabric-ai -r -p raw_query

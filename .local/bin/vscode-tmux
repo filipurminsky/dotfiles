@@ -1,0 +1,5 @@
+#!/bin/bash
+
+PROJECT_NAME=$(basename "$PWD" | tr . _)
+
+tmux new-session -A -s "$PROJECT_NAME"

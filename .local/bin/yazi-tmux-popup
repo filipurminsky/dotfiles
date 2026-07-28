@@ -1,0 +1,22 @@
+#!/bin/sh
+# Run yazi inside a tmux popup, then cd the pane that opened it to wherever
+# navigation ended up.
+#   Usage:  yazi-tmux-popup <origin-pane-id>
+# Invoked from the `bind y` display-popup in ~/.config/tmux/tmux.conf, which
+# passes #{pane_id} so we know which pane to send the cd to - the popup itself
+# is a throwaway pane and cd'ing it would accomplish nothing.
+
+pane=$1
+[ -n "$pane" ] || { yazi; exit; }
+
+cwd_file=$(mktemp) || exit 1
+trap 'rm -f "$cwd_file"' EXIT INT TERM
+
+yazi --cwd-file="$cwd_file"
+
+cwd=$(cat "$cwd_file")
+# Skip when yazi never wrote a cwd, or nothing moved - keeps a no-op `cd` out
+# of shell history when the popup is used just to look around.
+[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] || exit 0
+
+tmux send-keys -t "$pane" "cd \"$cwd\"" Enter
