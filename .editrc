@@ -1,0 +1,2 @@
+# Use vi-style line editing in the Homebrew MySQL client (libedit).
+mysql:bind -v
