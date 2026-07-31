@@ -10,6 +10,8 @@ brew "atuin"
 brew "bash"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Render Markdown in Yazi's Piper previewer
+brew "glow"
 # Secure and free password manager for all of your devices
 brew "bitwarden-cli"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
@@ -94,6 +96,10 @@ brew "ripgrep"
 brew "ruff"
 # 7-Zip is a file archiver with a high compression ratio
 brew "sevenzip"
+# Static analysis tool for shell scripts
+brew "shellcheck"
+# Shell script formatter
+brew "shfmt"
 # Editor of encrypted files
 brew "sops"
 # Tail multiple Kubernetes pods & their containers
@@ -117,7 +123,8 @@ brew "uv"
 # Pager / text-based web browser (renders HTML email in aerc)
 brew "w3m"
 # Blazing fast terminal file manager written in Rust, based on async I/O
-brew "yazi", args: ["HEAD"]
+# Use Homebrew's stable release so plugin APIs do not change unexpectedly.
+brew "yazi"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
 # Shell extension to navigate your filesystem faster
