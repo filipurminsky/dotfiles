@@ -22,7 +22,16 @@
 // Attaching as a second GATT client does not disturb the HID link — the system
 // keeps its own connection; ours is layered on the same one.
 //
-// Build: swiftc -O btbattery.swift -o btbattery
+// Build (bootstrap.sh does this; the repo tracks this source, not the binary):
+//
+//   swiftc -O btbattery.swift -o btbattery \
+//     -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist \
+//     -Xlinker btbattery-Info.plist
+//
+// The -sectcreate part is not optional. TCC reads
+// NSBluetoothAlwaysUsageDescription out of the binary's own __info_plist
+// section; a plain `swiftc -O btbattery.swift -o btbattery` leaves that section
+// missing and CoreBluetooth aborts the process with SIGABRT and no output.
 
 import Foundation
 import CoreBluetooth

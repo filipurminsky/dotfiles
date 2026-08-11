@@ -11,6 +11,8 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - `.config/atuin/config.toml`
 - `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks/fonts)
 - `.config/dotfiles/` (this README + `bootstrap.sh`)
+- macOS desktop: `.config/aerospace/` (tiling WM), `.config/sketchybar/` (bar +
+  plugins), `.config/borders/` — see the note below on the one build artefact
 
 ## What lives in its own repo (cloned by bootstrap)
 - Neovim → [`nvim-config`](https://github.com/filipurminsky/nvim-config) → `~/.config/nvim`
@@ -46,7 +48,9 @@ dotfiles config status.showUntrackedFiles no
 # Run the installer. It auto-detects the OS:
 #   Linux  -> apt prereqs -> Linuxbrew -> brew bundle (Brewfile)
 #   macOS  -> Homebrew -> brew bundle (Brewfile + Brewfile.macos casks/fonts)
-# then OMZ, zsh plugins, nvim/yazi, TPM, fnm, optional zsh login shell, git identity.
+# then OMZ, zsh plugins, nvim/yazi, TPM, fnm, Sqlit (with MySQL support),
+# optional zsh login shell, git identity, and on macOS the desktop stack
+# (btbattery build + launchd timer, first AeroSpace launch).
 ~/.config/dotfiles/bootstrap.sh
 ```
 
@@ -98,3 +102,17 @@ dotfiles push
   ```
   On Linux there's no `security`; swap the `*-cred-cmd` lines to a local secret
   store (e.g. `pass show aerc-gmail`).
+- macOS desktop (aerospace + sketchybar + borders): none of the three uses
+  `brew services`. `aerospace.toml` sets `start-at-login` and its
+  `after-startup-command` execs borders and sketchybar, so AeroSpace brings up
+  the whole bar. AeroSpace needs **Accessibility** permission (System Settings >
+  Privacy & Security) before it can manage windows.
+- `sketchybar/bin/btbattery` is the one build artefact: the Swift source is
+  tracked, the compiled binary is gitignored, and `bootstrap.sh` builds it with
+  `swiftc -sectcreate` to embed `btbattery-Info.plist`. That embedding is
+  required — TCC reads the Bluetooth usage description from the binary's own
+  `__info_plist` section, and CoreBluetooth aborts silently without it. A
+  launchd timer (`.config/sketchybar/launchd/`, installed to
+  `~/Library/LaunchAgents` with `__HOME__` substituted) runs the poll wrapper,
+  because a plugin spawned by sketchybar inherits sketchybar's TCC context and
+  gets denied.

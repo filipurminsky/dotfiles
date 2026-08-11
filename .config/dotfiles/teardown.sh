@@ -43,21 +43,39 @@ for d in \
   "$HOME/.local/share/nvim" "$HOME/.local/state/nvim" "$HOME/.cache/nvim" \
   "$HOME/.local/share/fnm" \
   "$HOME/.local/share/atuin" \
+  "$HOME/.cache/sketchybar" \
+  "$HOME/.config/sketchybar/bin/btbattery" \
   "$HOME/.gitconfig.local"; do
   [ -e "$d" ] && { info "rm $d"; rm -rf "$d"; }
 done
 
-# 3. SDKMAN (only if bootstrap installed it) ---------------------------------
+# 3. btbattery launchd timer (only if bootstrap installed it) ----------------
+# The compiled binary and its cache are removed above; this drops the timer.
+AGENT="$HOME/Library/LaunchAgents/local.sketchybar.btbattery.plist"
+if manifest_has "launchagent:local.sketchybar.btbattery" && [ -f "$AGENT" ]; then
+  info "Unloading the btbattery launchd timer"
+  launchctl bootout "gui/$UID/local.sketchybar.btbattery" 2>/dev/null \
+    || launchctl unload "$AGENT" 2>/dev/null || true
+  rm -f "$AGENT"
+fi
+
+# 4. Sqlit (only if bootstrap installed it) ----------------------------------
+if manifest_has "uvtool:sqlit-tui" && have uv; then
+  info "Removing Sqlit"
+  uv tool uninstall sqlit-tui || true
+fi
+
+# 5. SDKMAN (only if bootstrap installed it) ---------------------------------
 if manifest_has "sdkman" && [ -d "$HOME/.sdkman" ]; then
   info "rm ~/.sdkman"; rm -rf "$HOME/.sdkman"
 fi
 
-# 4. Oh My Zsh (only if bootstrap installed it) ------------------------------
+# 6. Oh My Zsh (only if bootstrap installed it) ------------------------------
 if manifest_has "omz" && [ -d "$HOME/.oh-my-zsh" ]; then
   info "rm ~/.oh-my-zsh"; rm -rf "$HOME/.oh-my-zsh"
 fi
 
-# 5. Homebrew (only if bootstrap installed it — else leave it + its formulae) -
+# 7. Homebrew (only if bootstrap installed it — else leave it + its formulae) -
 if manifest_has "brew"; then
   for p in /home/linuxbrew/.linuxbrew /opt/homebrew /usr/local/Homebrew; do
     [ -x "$p/bin/brew" ] || continue
@@ -70,7 +88,7 @@ elif have brew; then
   warn "review and run:  brew bundle --file ~/Brewfile cleanup"
 fi
 
-# 6. apt packages bootstrap added (and nothing else) -------------------------
+# 8. apt packages bootstrap added (and nothing else) -------------------------
 apt_pkgs="$(grep -E '^apt:' "$MANIFEST" 2>/dev/null | cut -d: -f2- | tr '\n' ' ')"
 if [ -n "${apt_pkgs// /}" ]; then
   info "apt packages bootstrap installed:$apt_pkgs"
@@ -80,7 +98,7 @@ if [ -n "${apt_pkgs// /}" ]; then
   fi
 fi
 
-# 7. Optional: remove the dotfiles checkout itself ---------------------------
+# 9. Optional: remove the dotfiles checkout itself ---------------------------
 if [ -d "$DOTGIT" ] && ask "Also remove the dotfiles files + bare repo (~/.dotfiles)?"; then
   if git --git-dir="$DOTGIT" --work-tree="$HOME" rev-parse >/dev/null 2>&1; then
     git --git-dir="$DOTGIT" --work-tree="$HOME" ls-files -z \
@@ -94,7 +112,7 @@ if [ -d "$DOTGIT" ] && ask "Also remove the dotfiles files + bare repo (~/.dotfi
   fi
 fi
 
-# 8. Remove the manifest itself ----------------------------------------------
+# 10. Remove the manifest itself ----------------------------------------------
 rm -f "$MANIFEST"; rmdir "$(dirname "$MANIFEST")" 2>/dev/null || true
 
 info "Teardown complete. Start a fresh login shell."

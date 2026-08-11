@@ -143,7 +143,19 @@ if [ "$MODE" = full ] && [ ! -d "$HOME/.sdkman" ]; then
   if [ "${a:-N}" = "y" ]; then record "sdkman"; curl -s "https://get.sdkman.io" | bash; fi
 fi
 
-# 10. Default login shell -> zsh (servers default to bash) ------------------
+# 10. Sqlit (full only) ------------------------------------------------------
+# Sqlit is distributed on PyPI rather than Homebrew. PyMySQL enables the MySQL
+# connections used by this setup. Pin the known-good release for reproducible
+# bootstraps; upgrade it deliberately with `uv tool upgrade sqlit-tui`.
+if [ "$MODE" = full ] && have uv; then
+  if ! uv tool list | grep -q '^sqlit-tui '; then
+    record "uvtool:sqlit-tui"
+    info "Installing Sqlit with MySQL support"
+    uv tool install 'sqlit-tui==1.5.2' --with PyMySQL
+  fi
+fi
+
+# 11. Default login shell -> zsh (servers default to bash) ------------------
 ZSH_BIN="$(command -v zsh || true)"
 if [ -n "$ZSH_BIN" ] && [ "${SHELL:-}" != "$ZSH_BIN" ]; then
   read -r -p "Set zsh ($ZSH_BIN) as your login shell? [y/N] " a
@@ -154,7 +166,7 @@ if [ -n "$ZSH_BIN" ] && [ "${SHELL:-}" != "$ZSH_BIN" ]; then
   fi
 fi
 
-# 11. Machine-local git identity -------------------------------------------
+# 12. Machine-local git identity -------------------------------------------
 if [ ! -f "$HOME/.gitconfig.local" ]; then
   info "Creating ~/.gitconfig.local (git identity — not tracked)"
   read -r -p "  git user.name:  " name
@@ -162,4 +174,54 @@ if [ ! -f "$HOME/.gitconfig.local" ]; then
   printf '[user]\n\tname = %s\n\temail = %s\n' "$name" "$email" > "$HOME/.gitconfig.local"
 fi
 
+# 13. macOS desktop: aerospace + sketchybar + borders (full, Darwin only) ---
+# The three tools need no service management here: aerospace.toml sets
+# start-at-login, and its after-startup-command execs borders and sketchybar,
+# so launching aerospace once brings up the whole bar. What does need doing is
+# the part the repo deliberately does not vendor — the btbattery binary — plus
+# the launchd timer that drives it.
+if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
+  SB="$HOME/.config/sketchybar"
+
+  if [ -f "$SB/bin/btbattery.swift" ]; then
+    if have swiftc; then
+      info "Building btbattery (Bluetooth keyboard battery helper)"
+      # -sectcreate embeds Info.plist in the binary. Required, not cosmetic:
+      # TCC reads NSBluetoothAlwaysUsageDescription from the __info_plist
+      # section and CoreBluetooth aborts without it. See btbattery.swift.
+      ( cd "$SB/bin" && swiftc -O btbattery.swift -o btbattery \
+          -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist \
+          -Xlinker btbattery-Info.plist ) \
+        || echo "!! btbattery build failed — the keyboard battery item stays blank" >&2
+    else
+      echo "!! swiftc not found (install Xcode CLT) — skipping btbattery build" >&2
+    fi
+  fi
+
+  AGENT_TEMPLATE="$SB/launchd/local.sketchybar.btbattery.plist"
+  AGENT="$HOME/Library/LaunchAgents/local.sketchybar.btbattery.plist"
+  if [ -f "$AGENT_TEMPLATE" ] && [ -x "$SB/bin/btbattery" ]; then
+    info "Installing the btbattery launchd timer"
+    mkdir -p "$HOME/Library/LaunchAgents"
+    sed "s|__HOME__|$HOME|g" "$AGENT_TEMPLATE" > "$AGENT"
+    record "launchagent:local.sketchybar.btbattery"
+    # Reload so an edited template takes effect on a re-run. bootout/bootstrap
+    # is the modern spelling; fall back to load for older macOS.
+    launchctl bootout "gui/$UID/local.sketchybar.btbattery" 2>/dev/null || true
+    launchctl bootstrap "gui/$UID" "$AGENT" 2>/dev/null \
+      || launchctl load "$AGENT" 2>/dev/null || true
+  fi
+
+  # First launch registers the start-at-login item and pulls up borders and
+  # sketchybar via after-startup-command.
+  if [ -d "/Applications/AeroSpace.app" ] && ! pgrep -x AeroSpace >/dev/null 2>&1; then
+    info "Launching AeroSpace (registers start-at-login, starts the bar)"
+    open -a AeroSpace || true
+  fi
+fi
+
 info "Done. Open a new shell. Optional: 'atuin import auto' (history), 'atuin login' (sync)."
+if [ "$OS" = "Darwin" ]; then
+  info "macOS: grant AeroSpace Accessibility access when prompted (System Settings"
+  info "  > Privacy & Security > Accessibility) — it cannot manage windows without it."
+fi
