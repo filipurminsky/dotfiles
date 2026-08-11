@@ -23,6 +23,14 @@ y() {
   rm -f -- "$tmp"
 }
 
+# Fuzzy-pick any open window (across all workspaces) and focus it.
+# aerospace prints "<window-id> | <app> | <title>", so {1} is the window id.
+# `become` replaces fzf with the focus call, so nothing lingers on screen.
+ff() {
+  aerospace list-windows --all |
+    fzf --bind 'enter:become(aerospace focus --window-id {1})'
+}
+
 # Open a repo under ~/git in nvim, with tab-completion of subdirectories.
 nv() {
   nvim "$HOME/git/$1"
