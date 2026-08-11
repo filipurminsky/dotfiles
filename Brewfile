@@ -1,4 +1,5 @@
 tap "argoproj/tap"
+tap "browsh-org/browsh"
 tap "craftamap/tap"
 tap "derailed/k9s"
 tap "homebrew-zathura/zathura"
@@ -127,6 +128,8 @@ brew "yazi"
 brew "yq"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
+# The modern, text-based browser
+brew "browsh-org/browsh/browsh"
 # Kubernetes CLI To Manage Your Clusters In Style!
 brew "derailed/k9s/k9s", trusted: true
 # PDF viewer

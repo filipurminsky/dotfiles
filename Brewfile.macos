@@ -1,14 +1,26 @@
-# macOS-only packages (GUI apps + fonts). Bundled by bootstrap.sh only on Darwin.
+# macOS-only packages (GUI apps, fonts, Darwin-only CLI tools). Bundled by
+# bootstrap.sh only on Darwin.
 # The cross-platform CLI toolchain lives in ~/Brewfile (used on both macOS and Linux).
+
+tap "felixkratz/formulae"
+tap "nasedkinpv/tap"
+tap "nikitabobko/tap"
 
 # Paste PNG into files
 brew "pngpaste"
 # Send macOS User Notifications from the command-line
 brew "terminal-notifier"
+# A window border system for macOS
+brew "felixkratz/formulae/borders"
+# Custom macOS statusbar with shell plugin, interaction and graph support
+brew "felixkratz/formulae/sketchybar"
+# Text calculator for natural language expressions with a vim-style TUI
+brew "nasedkinpv/tap/numr"
 
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
 cask "font-jetbrains-mono-nerd-font"
+cask "font-sketchybar-app-font"
 cask "font-symbols-only-nerd-font"
 # Disk space cleaner that finds and deletes duplicated and similar files
 cask "gemini"
@@ -18,3 +30,5 @@ cask "ghostty"
 cask "karabiner-elements"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
+# i3-like tiling window manager for macOS
+cask "nikitabobko/tap/aerospace"
