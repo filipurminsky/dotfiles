@@ -1,0 +1,313 @@
+# AeroSpace — https://nikitabobko.github.io/AeroSpace/guide
+# Reload: alt-shift-semicolon then esc, or `aerospace reload-config`
+# Validate without applying: aerospace reload-config --dry-run --no-gui
+
+config-version = 2
+
+start-at-login = true
+
+# Required under config-version 2: v1 inferred these from key bindings, v2
+# defaults to none. Without this, empty workspaces vanish from the bar.
+persistent-workspaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+# borders + sketchybar are started by AeroSpace itself, so do NOT also run
+# `brew services start sketchybar` / `borders` — you'd get two instances.
+after-startup-command = [
+  'exec-and-forget /opt/homebrew/bin/borders',
+  'exec-and-forget /opt/homebrew/bin/sketchybar',
+]
+
+# Tell sketchybar which workspace is focused. This is a single argv array
+# (program, args...) — not a list of commands. Extra elements would be
+# swallowed as $0 and silently never run.
+exec-on-workspace-change = [
+  '/bin/bash', '-c',
+  '/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE',
+]
+
+# Normalizations keep the tree tidy (no stray single-child containers).
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+accordion-padding = 30
+
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+
+automatically-unhide-macos-hidden-apps = false
+
+# ──────────────────────────────────────────────────────────────
+# Everything below is a TOML table. Nothing that isn't part of a
+# table may be added past this line — a table header swallows every
+# key after it until the next header.
+# ──────────────────────────────────────────────────────────────
+
+# AeroSpace launched by macOS gets a minimal PATH, so anything it execs
+# can't find Homebrew binaries. Fix it once, here.
+[exec]
+inherit-env-vars = true
+
+[exec.env-vars]
+PATH = '/opt/homebrew/bin:/opt/homebrew/sbin:${PATH}'
+
+[key-mapping]
+preset = 'qwerty'
+
+[gaps]
+# Flush to the screen edges, with a hairline between adjacent windows.
+inner.horizontal = 4
+inner.vertical   = 4
+outer.left       = 0
+outer.right      = 0
+# 0, not 32. macOS reserves a 32pt notch safe area at the top of this
+# display (frame 1117 tall, visibleFrame 1085) and AeroSpace already tiles
+# below it. The 32pt bar sits inside that reserved strip, so it costs no
+# space — anything here is a gap between the bar and the topmost window.
+outer.top        = 0
+outer.bottom     = 0
+
+# The centered-column look from your previous config, if you want it back:
+# inner.horizontal = [{ monitor.main = 40 }, 10]
+# inner.vertical   = [{ monitor.main = 40 }, 10]
+# outer.left       = [{ monitor.main = 350 }, 20]
+# outer.right      = [{ monitor.main = 350 }, 20]
+# outer.top        = [{ monitor.main = 100 }, 10]
+# outer.bottom     = [{ monitor.main = 100 }, 10]
+
+# ──────────────────────────────────────────────────────────────
+# Main mode
+# ──────────────────────────────────────────────────────────────
+[mode.main.binding]
+
+alt-enter = 'exec-and-forget open -a /Applications/Ghostty.app'
+
+# Focus / move  (i3 convention)
+# NOTE: alt-shift-h and alt-shift-l shadow tmux's M-H / M-L (previous/next
+# window) in ~/.config/tmux/tmux.conf:29-30 — AeroSpace wins, so rebind those
+# in tmux.
+alt-h = 'focus left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus right'
+
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+
+# Monitors
+alt-ctrl-h = 'focus-monitor left'
+alt-ctrl-l = 'focus-monitor right'
+alt-ctrl-shift-h = 'move-node-to-monitor --focus-follows-window left'
+alt-ctrl-shift-l = 'move-node-to-monitor --focus-follows-window right'
+
+# Layout
+alt-slash = 'layout tiles horizontal vertical'
+alt-comma = 'layout accordion horizontal vertical'
+alt-f = 'fullscreen --no-outer-gaps'
+alt-shift-f = 'layout floating tiling'
+
+# Window
+alt-shift-q = 'close'
+alt-shift-minus = 'resize smart -50'
+alt-shift-equal = 'resize smart +50'
+
+# Workspaces
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8'
+alt-9 = 'workspace 9'
+
+alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
+alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
+alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
+alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
+alt-shift-5 = 'move-node-to-workspace 5 --focus-follows-window'
+alt-shift-6 = 'move-node-to-workspace 6 --focus-follows-window'
+alt-shift-7 = 'move-node-to-workspace 7 --focus-follows-window'
+alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
+alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
+
+alt-tab = 'workspace-back-and-forth'
+alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+# Sub-modes
+alt-r = 'mode resize'
+alt-shift-semicolon = 'mode service'
+alt-shift-enter = 'mode apps'
+
+# ──────────────────────────────────────────────────────────────
+# Resize mode — alt-r, hjkl to resize, esc/enter to leave
+# ──────────────────────────────────────────────────────────────
+[mode.resize.binding]
+h = 'resize width -50'
+j = 'resize height +50'
+k = 'resize height -50'
+l = 'resize width +50'
+b = 'balance-sizes'
+minus = 'resize smart -50'
+equal = 'resize smart +50'
+enter = 'mode main'
+esc = 'mode main'
+
+# ──────────────────────────────────────────────────────────────
+# Service mode — alt-shift-semicolon
+# ──────────────────────────────────────────────────────────────
+[mode.service.binding]
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main']   # reset layout
+f = ['layout floating tiling', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+
+alt-shift-h = ['join-with left', 'mode main']
+alt-shift-j = ['join-with down', 'mode main']
+alt-shift-k = ['join-with up', 'mode main']
+alt-shift-l = ['join-with right', 'mode main']
+
+# ──────────────────────────────────────────────────────────────
+# Apps mode — alt-shift-enter, then one key. esc always gets you out.
+# Only apps actually installed on this machine are bound.
+# ──────────────────────────────────────────────────────────────
+[mode.apps.binding]
+esc = 'mode main'
+enter = 'mode main'
+
+t = ['exec-and-forget open -a /Applications/Ghostty.app', 'mode main']
+o = ['exec-and-forget open -a /Applications/Obsidian.app', 'mode main']
+f = ['exec-and-forget open -a /System/Library/CoreServices/Finder.app', 'mode main']
+q = ['exec-and-forget open -a "/System/Applications/QuickTime Player.app"', 'mode main']
+
+# Not installed yet — uncomment once they are:
+# s = ['exec-and-forget open -a /Applications/Slack.app', 'mode main']
+# g = ['exec-and-forget open -a /Applications/Telegram.app', 'mode main']
+# z = ['exec-and-forget open -a /Applications/Zen.app', 'mode main']
+# w = ['exec-and-forget open -a /Applications/WezTerm.app', 'mode main']
+# e = ['exec-and-forget open -a "/Applications/Final Cut Pro.app"', 'mode main']
+# b = ['exec-and-forget open -a /Applications/Brain.fm.app', 'mode main']
+
+# ──────────────────────────────────────────────────────────────
+# Window rules
+# ──────────────────────────────────────────────────────────────
+# app-name-regex-substring is case-insensitive.
+[[on-window-detected]]
+if.app-name-regex-substring = 'telegram'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'finder'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'safari'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'discord'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'mail'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'trello'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'quicktime'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = 'layout floating'
+
+# Utility and background apps. These open small dialogs or players that
+# shouldn't claim a tile and reflow the workspace around them.
+[[on-window-detected]]
+if.app-id = 'com.paloaltonetworks.GlobalProtect.client'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.zscaler.zscaler'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Music'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'org.videolan.vlc'
+run = 'layout floating'
+
+# ──────────────────────────────────────────────────────────────
+# Home workspace per app. Applied whenever AeroSpace detects a window —
+# at login, on launch, and on the re-detection that follows a display
+# change. This is what keeps the layout stable across restarts; AeroSpace
+# has no session save/restore.
+#
+# Only the first matching rule runs unless it sets check-further-callbacks,
+# so these sit below the floating rules above. None of them overlap today.
+# Bundle IDs come from `aerospace list-apps` — stable across renames.
+# ──────────────────────────────────────────────────────────────
+
+# 1 — terminal
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = 'move-node-to-workspace 1'
+
+# 2 — browsers
+[[on-window-detected]]
+if.app-id = 'com.brave.Browser'
+run = 'move-node-to-workspace 2'
+
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+run = 'move-node-to-workspace 2'
+
+# 3 — chat
+[[on-window-detected]]
+if.app-id = 'com.microsoft.teams2'
+run = 'move-node-to-workspace 3'
+
+# Slack isn't installed — bundle ID unverified, uncomment once it is.
+# [[on-window-detected]]
+# if.app-id = 'com.tinyspeck.slackmacgap'
+# run = 'move-node-to-workspace 3'
+
+# 4 — mail & calendar
+[[on-window-detected]]
+if.app-id = 'com.microsoft.Outlook'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.iCal'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'com.readdle.SparkDesktop.appstore'
+run = 'move-node-to-workspace 4'
+
+# 5 — writing
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.Word'
+run = 'move-node-to-workspace 5'
+
+# No workspace-to-monitor-force-assignment: single-display setup, so every
+# workspace lands on the built-in panel by default. Adding the block back
+# only makes sense if an external display is ever used — and note that a
+# pattern which matches nothing falls back to the main monitor silently.

@@ -73,3 +73,6 @@ __pycache__/
 .config/tmux/plugins/
 .config/nvim/
 .config/yazi/
+
+# ── Compiled from btbattery.swift, which is tracked next to it ───────
+.config/sketchybar/bin/btbattery

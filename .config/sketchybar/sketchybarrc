@@ -1,0 +1,231 @@
+#!/usr/bin/env bash
+# sketchybar — Catppuccin Mocha, driven by AeroSpace
+# Started by AeroSpace's after-startup-command; do not also use brew services.
+
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+# Catppuccin Mocha — shared with every plugin via the same file.
+source "$PLUGIN_DIR/colors.sh"
+
+# The "JetBrainsMono NFM" family only exposes Regular and Bold. Heavier
+# weights ship as separate families ("JetBrainsMono NFM ExtraBold", subfamily
+# Regular) — asking for NFM:ExtraBold silently falls back to a face with no
+# Nerd Font glyphs, which renders every icon as tofu.
+FONT="JetBrainsMono NFM"
+APPFONT="sketchybar-app-font"
+
+##### Bar #####
+# notch_width reserves a gap so centre items clear the notch on the built-in
+# display. Do NOT add notch_display_height here — it is the bar's height on
+# the notched display, not a display selector, so a value like 1117 makes the
+# bar swallow the screen. --query bar does not report either back.
+sketchybar --bar \
+  height=32 \
+  position=top \
+  sticky=on \
+  padding_left=8 \
+  padding_right=8 \
+  color=$BASE \
+  shadow=off \
+  topmost=window \
+  notch_width=200
+
+##### Defaults #####
+sketchybar --default \
+  updates=when_shown \
+  icon.font="$FONT:Bold:16.0" \
+  icon.color=$TEXT \
+  icon.padding_left=6 \
+  icon.padding_right=4 \
+  label.font="$FONT:Medium:13.0" \
+  label.color=$TEXT \
+  label.padding_left=4 \
+  label.padding_right=6 \
+  background.corner_radius=5 \
+  background.height=22 \
+  popup.background.color=$MANTLE \
+  popup.background.corner_radius=6 \
+  popup.background.border_width=1 \
+  popup.background.border_color=$LINE \
+  popup.background.shadow.drawing=on \
+  popup.blur_radius=20 \
+  popup.horizontal=off \
+  popup.align=left \
+  popup.y_offset=4
+
+##### Apple menu #####
+# Adapted from omerxx/dotfiles sketchybar/items/apple.sh — its icons and
+# colours came from that repo's own icons.sh/colors.sh, so they're swapped
+# for Nerd Font glyphs and Mocha here. "System Preferences" is "System
+# Settings" on macOS 26.
+POPUP_OFF="sketchybar --set apple.logo popup.drawing=off"
+
+# U+F179 (nf-fa-apple) is in the Basic Multilingual Plane's private use area
+# and doesn't survive being written into this file as a literal character,
+# so build it from its UTF-8 bytes instead.
+APPLE=$(printf '\xef\x85\xb9')
+
+sketchybar --add item apple.logo left \
+  --subscribe apple.logo mouse.exited.global \
+  --set apple.logo \
+    icon="$APPLE" \
+    icon.font="$FONT:Bold:20.0" \
+    icon.color=$BLUE \
+    icon.padding_left=10 \
+    icon.padding_right=10 \
+    label.drawing=off \
+    background.padding_right=10 \
+    click_script="sketchybar --set \$NAME popup.drawing=toggle" \
+    script="$PLUGIN_DIR/apple.sh" \
+  \
+  --add item apple.prefs popup.apple.logo \
+  --set apple.prefs \
+    icon="󰒓" \
+    label="System Settings" \
+    click_script="open -a 'System Settings'; $POPUP_OFF" \
+  \
+  --add item apple.activity popup.apple.logo \
+  --set apple.activity \
+    icon="󰓅" \
+    label="Activity Monitor" \
+    click_script="open -a 'Activity Monitor'; $POPUP_OFF" \
+  \
+  --add item apple.lock popup.apple.logo \
+  --set apple.lock \
+    icon="󰌾" \
+    label="Lock Screen" \
+    click_script="/usr/bin/osascript -e 'tell application \"System Events\" to key code 12 using {command down, control down}' 2>/dev/null || /usr/bin/pmset displaysleepnow; $POPUP_OFF"
+
+##### Workspaces #####
+# AeroSpace fires this from exec-on-workspace-change.
+sketchybar --add event aerospace_workspace_change
+
+WORKSPACES=$(aerospace list-workspaces --all 2>/dev/null)
+[ -z "$WORKSPACES" ] && WORKSPACES=$(seq 1 9)
+
+# The items carry no script of their own — plugins/spaces.sh sets all of them
+# in one pass, so a workspace switch costs one process instead of nine.
+for sid in $WORKSPACES; do
+  sketchybar --add item "space.$sid" left \
+    --set "space.$sid" \
+      icon="$sid" \
+      icon.font="$FONT:Bold:13.0" \
+      icon.padding_left=9 \
+      icon.padding_right=5 \
+      label.font="$APPFONT:Regular:15.0" \
+      label.padding_right=9 \
+      label.drawing=off \
+      background.color=$BLUE \
+      background.drawing=off \
+      drawing=off \
+      click_script="aerospace workspace $sid"
+done
+
+# Hidden driver. updates=on so it keeps running while it isn't drawn. The
+# events cover every change that moves focus (opening and closing windows
+# almost always does); the poll only mops up background windows appearing or
+# vanishing without a focus change, so it can be slow.
+sketchybar --add item spaces_driver left \
+  --subscribe spaces_driver aerospace_workspace_change front_app_switched \
+  --set spaces_driver \
+    drawing=off \
+    updates=on \
+    update_freq=10 \
+    script="$PLUGIN_DIR/spaces.sh"
+
+##### Focused app #####
+# Name only — the app icon here duplicated the workspace icons and read as
+# a second, unrelated indicator.
+sketchybar --add item front_app left \
+  --subscribe front_app front_app_switched \
+  --set front_app \
+    icon.drawing=off \
+    label.font="$FONT:Bold:13.0" \
+    label.color=$BLUE \
+    padding_left=10 \
+    script="$PLUGIN_DIR/front_app.sh"
+
+##### Right side — added right to left #####
+# Every item here opens the thing it reports on.
+sketchybar --add item clock right \
+  --set clock \
+    update_freq=15 \
+    icon="󰥔" \
+    icon.color=$OVERLAY \
+    click_script="open -a Calendar" \
+    script="$PLUGIN_DIR/clock.sh"
+
+# wttr.in over the network, so: long poll (weather is slow-moving data) and
+# system_woke/wifi_change to re-fetch after sleep or a network flip. The
+# plugin paints its cached reading first so reloads show weather instantly,
+# then fetches fresh; it hides itself only when it has nothing at all to
+# show, and updates=on lets a hidden item run again to come back.
+sketchybar --add item weather right \
+  --subscribe weather system_woke wifi_change \
+  --set weather \
+    updates=on \
+    update_freq=900 \
+    click_script="open -a Weather" \
+    script="$PLUGIN_DIR/weather.sh"
+
+# update_freq is short because the label is a time estimate, not a percentage.
+sketchybar --add item battery right \
+  --subscribe battery power_source_change system_woke \
+  --set battery \
+    update_freq=60 \
+    click_script="open 'x-apple.systempreferences:com.apple.Battery-Settings.extension'" \
+    script="$PLUGIN_DIR/battery.sh"
+
+# Keychron K3 Max. The Bluetooth read happens in the launchd agent
+# local.sketchybar.btbattery — TCC kills it if sketchybar is its parent — and
+# that agent fires this event when it has a fresh value. update_freq is only a
+# safety net for a missed trigger; the script just reads a cached file.
+# Hides itself when the keyboard is off.
+sketchybar --add event keyboard_battery
+
+sketchybar --add item keyboard right \
+  --subscribe keyboard keyboard_battery system_woke \
+  --set keyboard \
+    updates=on \
+    update_freq=120 \
+    click_script="open 'x-apple.systempreferences:com.apple.BluetoothSettings'" \
+    script="$PLUGIN_DIR/keyboard.sh"
+
+sketchybar --add item volume right \
+  --subscribe volume volume_change \
+  --set volume \
+    click_script="open 'x-apple.systempreferences:com.apple.Sound-Settings.extension'" \
+    script="$PLUGIN_DIR/volume.sh"
+
+# Icon only — no SSID (Location Services gated on macOS 26) and no IP.
+sketchybar --add item wifi right \
+  --subscribe wifi wifi_change system_woke \
+  --set wifi \
+    update_freq=30 \
+    label.drawing=off \
+    icon.padding_right=6 \
+    click_script="open 'x-apple.systempreferences:com.apple.Network-Settings.extension'" \
+    script="$PLUGIN_DIR/wifi.sh"
+
+# No sketchybar event fires on VPN state, so this polls. Grouped next to wifi.
+# GlobalProtect's only UI is a popover on its menu-bar status item — just
+# activating the app shows nothing, so the click "presses" the status item
+# via System Events (same Automation grant the lock-screen item uses).
+sketchybar --add item vpn right \
+  --subscribe vpn wifi_change system_woke \
+  --set vpn \
+    update_freq=10 \
+    label.drawing=off \
+    icon.padding_right=6 \
+    click_script="/usr/bin/osascript -e 'tell application \"System Events\" to tell process \"GlobalProtect\" to click menu bar item 1 of menu bar 2' 2>/dev/null || open -a GlobalProtect" \
+    script="$PLUGIN_DIR/vpn.sh"
+
+sketchybar --add item ram right \
+  --set ram \
+    update_freq=10 \
+    click_script="open -a 'Activity Monitor'" \
+    script="$PLUGIN_DIR/ram.sh"
+
+##### Go #####
+sketchybar --update

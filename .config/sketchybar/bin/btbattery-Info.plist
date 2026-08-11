@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>local.sketchybar.btbattery</string>
+  <key>CFBundleName</key>
+  <string>btbattery</string>
+  <key>NSBluetoothAlwaysUsageDescription</key>
+  <string>Reads the battery level of your connected Bluetooth keyboard for the status bar.</string>
+</dict>
+</plist>
