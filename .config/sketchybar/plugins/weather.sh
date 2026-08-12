@@ -12,6 +12,7 @@
 # 644 script fails silently: no timer ticks, no events, nothing.
 
 source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/plugins/hover.sh"
 
 CITY=""   # e.g. "Bratislava" — URL-encode spaces as +
 
@@ -33,7 +34,7 @@ render() {  # $1 = "Condition|+21°C"
     *clear*|*sunny*)                  icon="󰖙" ;;
     *)                                icon="󰖕" ;;
   esac
-  sketchybar --set "$NAME" drawing=on icon="$icon" icon.color=$OVERLAY label="$temp"
+  sketchybar --set "$NAME" drawing=on icon="$icon" icon.color=$YELLOW label="$temp"
 }
 
 # 1. Paint the cached reading immediately, if it's fresh enough.

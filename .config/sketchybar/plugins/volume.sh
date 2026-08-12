@@ -2,6 +2,7 @@
 # $INFO is the volume percentage on a volume_change event.
 
 source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/plugins/hover.sh"
 
 VOL="$INFO"
 if [ -z "$VOL" ]; then
@@ -13,11 +14,11 @@ MUTED=$(osascript -e 'output muted of (get volume settings)' 2>/dev/null)
 if [ "$MUTED" = "true" ] || [ "$VOL" -eq 0 ]; then
   ICON="󰝟"; COLOR=$OVERLAY
 elif [ "$VOL" -gt 60 ]; then
-  ICON="󰕾"; COLOR=$TEXT
+  ICON="󰕾"; COLOR=$PINK
 elif [ "$VOL" -gt 20 ]; then
-  ICON="󰖀"; COLOR=$TEXT
+  ICON="󰖀"; COLOR=$PINK
 else
-  ICON="󰕿"; COLOR=$TEXT
+  ICON="󰕿"; COLOR=$PINK
 fi
 
 sketchybar --set "$NAME" icon="$ICON" icon.color="$COLOR" label="${VOL}%"

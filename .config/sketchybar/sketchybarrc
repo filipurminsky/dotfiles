@@ -20,13 +20,17 @@ APPFONT="sketchybar-app-font"
 # display. Do NOT add notch_display_height here — it is the bar's height on
 # the notched display, not a display selector, so a value like 1117 makes the
 # bar swallow the screen. --query bar does not report either back.
+# Flush to the screen edges; translucent BASE90 + blur let wallpaper glow
+# through. AeroSpace's outer.top=0 relies on the menu-bar reservation covering
+# the bar's height — grow it and windows slide under the bar.
 sketchybar --bar \
   height=32 \
   position=top \
   sticky=on \
   padding_left=8 \
   padding_right=8 \
-  color=$BASE \
+  color=$BASE90 \
+  blur_radius=30 \
   shadow=off \
   topmost=window \
   notch_width=200
@@ -106,9 +110,12 @@ WORKSPACES=$(aerospace list-workspaces --all 2>/dev/null)
 
 # The items carry no script of their own — plugins/spaces.sh sets all of them
 # in one pass, so a workspace switch costs one process instead of nine.
+SPACE_ITEMS=""
 for sid in $WORKSPACES; do
   sketchybar --add item "space.$sid" left \
+    --subscribe "space.$sid" mouse.entered mouse.exited \
     --set "space.$sid" \
+      script="$PLUGIN_DIR/space_hover.sh" \
       icon="$sid" \
       icon.font="$FONT:Bold:13.0" \
       icon.padding_left=9 \
@@ -120,7 +127,17 @@ for sid in $WORKSPACES; do
       background.drawing=off \
       drawing=off \
       click_script="aerospace workspace $sid"
+  SPACE_ITEMS="$SPACE_ITEMS space.$sid"
 done
+
+# One pill behind the whole workspace strip; the focused workspace's blue
+# background draws on top of it. Brackets auto-resize as members hide/show.
+sketchybar --add bracket spaces $SPACE_ITEMS \
+  --set spaces \
+    background.drawing=on \
+    background.color=$SURFACE0 \
+    background.corner_radius=5 \
+    background.height=22
 
 # Hidden driver. updates=on so it keeps running while it isn't drawn. The
 # events cover every change that moves focus (opening and closing windows
@@ -138,21 +155,39 @@ sketchybar --add item spaces_driver left \
 # Name only — the app icon here duplicated the workspace icons and read as
 # a second, unrelated indicator.
 sketchybar --add item front_app left \
-  --subscribe front_app front_app_switched \
+  --subscribe front_app front_app_switched mouse.entered mouse.exited \
   --set front_app \
     icon.drawing=off \
     label.font="$FONT:Bold:13.0" \
     label.color=$BLUE \
     padding_left=10 \
+    background.drawing=on \
+    background.color=$SURFACE0 \
     script="$PLUGIN_DIR/front_app.sh"
 
 ##### Right side — added right to left #####
 # Every item here opens the thing it reports on.
+
+# Labels match the left side's front_app text (Bold 13, blue). Defaults are
+# snapshotted at --add time, so this only styles the items below it. Each item
+# gets its own SURFACE0 pill (wifi/vpn opt out — they share the "network"
+# bracket's pill) and its own accent for the icon's normal state; the other
+# icon colours are state signals (yellow/red battery, red wifi, VPN green).
+sketchybar --default \
+  label.font="$FONT:Bold:13.0" \
+  label.color=$BLUE \
+  background.drawing=on \
+  background.color=$SURFACE0
+
+# padding_left on each item below is the visual gap between groups; wifi and
+# vpn carry none so they read as one network cluster.
 sketchybar --add item clock right \
+  --subscribe clock mouse.entered mouse.exited \
   --set clock \
     update_freq=15 \
+    padding_left=6 \
     icon="󰥔" \
-    icon.color=$OVERLAY \
+    icon.color=$MAUVE \
     click_script="open -a Calendar" \
     script="$PLUGIN_DIR/clock.sh"
 
@@ -162,18 +197,20 @@ sketchybar --add item clock right \
 # then fetches fresh; it hides itself only when it has nothing at all to
 # show, and updates=on lets a hidden item run again to come back.
 sketchybar --add item weather right \
-  --subscribe weather system_woke wifi_change \
+  --subscribe weather system_woke wifi_change mouse.entered mouse.exited \
   --set weather \
     updates=on \
     update_freq=900 \
+    padding_left=6 \
     click_script="open -a Weather" \
     script="$PLUGIN_DIR/weather.sh"
 
 # update_freq is short because the label is a time estimate, not a percentage.
 sketchybar --add item battery right \
-  --subscribe battery power_source_change system_woke \
+  --subscribe battery power_source_change system_woke mouse.entered mouse.exited \
   --set battery \
     update_freq=60 \
+    padding_left=6 \
     click_script="open 'x-apple.systempreferences:com.apple.Battery-Settings.extension'" \
     script="$PLUGIN_DIR/battery.sh"
 
@@ -185,25 +222,28 @@ sketchybar --add item battery right \
 sketchybar --add event keyboard_battery
 
 sketchybar --add item keyboard right \
-  --subscribe keyboard keyboard_battery system_woke \
+  --subscribe keyboard keyboard_battery system_woke mouse.entered mouse.exited \
   --set keyboard \
     updates=on \
     update_freq=120 \
+    padding_left=6 \
     click_script="open 'x-apple.systempreferences:com.apple.BluetoothSettings'" \
     script="$PLUGIN_DIR/keyboard.sh"
 
 sketchybar --add item volume right \
-  --subscribe volume volume_change \
+  --subscribe volume volume_change mouse.entered mouse.exited \
   --set volume \
+    padding_left=6 \
     click_script="open 'x-apple.systempreferences:com.apple.Sound-Settings.extension'" \
     script="$PLUGIN_DIR/volume.sh"
 
 # Icon only — no SSID (Location Services gated on macOS 26) and no IP.
 sketchybar --add item wifi right \
-  --subscribe wifi wifi_change system_woke \
+  --subscribe wifi wifi_change system_woke mouse.entered mouse.exited \
   --set wifi \
     update_freq=30 \
     label.drawing=off \
+    background.drawing=off \
     icon.padding_right=6 \
     click_script="open 'x-apple.systempreferences:com.apple.Network-Settings.extension'" \
     script="$PLUGIN_DIR/wifi.sh"
@@ -213,19 +253,31 @@ sketchybar --add item wifi right \
 # activating the app shows nothing, so the click "presses" the status item
 # via System Events (same Automation grant the lock-screen item uses).
 sketchybar --add item vpn right \
-  --subscribe vpn wifi_change system_woke \
+  --subscribe vpn wifi_change system_woke mouse.entered mouse.exited \
   --set vpn \
     update_freq=10 \
     label.drawing=off \
+    background.drawing=off \
+    icon="VPN" \
+    icon.font="$FONT:ExtraBold:9.0" \
+    icon.background.drawing=on \
+    icon.background.corner_radius=4 \
+    icon.background.border_width=1 \
+    icon.background.height=15 \
+    icon.background.padding_left=-3 \
+    icon.background.padding_right=-3 \
     icon.padding_right=6 \
     click_script="/usr/bin/osascript -e 'tell application \"System Events\" to tell process \"GlobalProtect\" to click menu bar item 1 of menu bar 2' 2>/dev/null || open -a GlobalProtect" \
     script="$PLUGIN_DIR/vpn.sh"
 
-sketchybar --add item ram right \
-  --set ram \
-    update_freq=10 \
-    click_script="open -a 'Activity Monitor'" \
-    script="$PLUGIN_DIR/ram.sh"
+# Shared pill for the network cluster; hover.sh repaints this bracket when the
+# mouse enters either member.
+sketchybar --add bracket network wifi vpn \
+  --set network \
+    background.drawing=on \
+    background.color=$SURFACE0 \
+    background.corner_radius=5 \
+    background.height=22
 
 ##### Go #####
 sketchybar --update

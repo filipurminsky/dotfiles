@@ -4,6 +4,7 @@
 # for a while after a power source change, so fall back to a dash.
 
 source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/plugins/hover.sh"
 
 BATT=$(pmset -g batt)
 PERCENT=$(echo "$BATT" | grep -Eo '[0-9]+%' | tr -d '%')
@@ -17,8 +18,8 @@ if [ "$CHARGING" -ne 0 ]; then
   COLOR=$GREEN
 else
   case "${PERCENT}" in
-    9[0-9]|100) ICON="󰁹"; COLOR=$TEXT ;;
-    [6-8][0-9]) ICON="󰂁"; COLOR=$TEXT ;;
+    9[0-9]|100) ICON="󰁹"; COLOR=$TEAL ;;
+    [6-8][0-9]) ICON="󰂁"; COLOR=$TEAL ;;
     [3-5][0-9]) ICON="󰁽"; COLOR=$YELLOW ;;
     [1-2][0-9]) ICON="󰁻"; COLOR=$PEACH ;;
     *)          ICON="󰁺"; COLOR=$RED ;;

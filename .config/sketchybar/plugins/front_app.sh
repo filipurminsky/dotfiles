@@ -2,6 +2,7 @@
 # $INFO carries the app name on front_app_switched. It's empty on a plain
 # --update (startup), so ask AeroSpace which window has focus instead.
 
+source "$CONFIG_DIR/plugins/hover.sh"
 source "$CONFIG_DIR/plugins/icon_map.sh"
 
 APP="$INFO"

@@ -38,7 +38,7 @@ for sid in $($AEROSPACE list-workspaces --all 2>/dev/null); do
            label.color=$BASE icon.color=$BASE)
   elif [ -n "$icons" ]; then
     args+=(--set "space.$sid" drawing=on background.drawing=off
-           label.color=$BLUE icon.color=$SUBTEXT)
+           label.color=$BLUE icon.color=$BLUE)
   else
     # empty and not focused — take it off the bar entirely
     args+=(--set "space.$sid" drawing=off)

@@ -8,6 +8,7 @@
 # (or only a 169.254 link-local) unless a tunnel is actually established.
 
 source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/plugins/hover.sh"
 
 IFACE=$(ifconfig 2>/dev/null | awk '
   /^[a-z0-9]+:/       { i = ""; if ($1 ~ /^utun/) i = substr($1, 1, length($1) - 1) }
@@ -19,7 +20,7 @@ IFACE=$(ifconfig 2>/dev/null | awk '
 # up, which is exactly the state that should look fine.
 
 if [ -n "$IFACE" ]; then
-  sketchybar --set "$NAME" icon="󰖂" icon.color=$GREEN   # green — tunnel up
+  sketchybar --set "$NAME" icon.color=$GREEN icon.background.border_color=$GREEN     # green — tunnel up
 else
-  sketchybar --set "$NAME" icon="󰖂" icon.color=$OVERLAY   # grey — no tunnel
+  sketchybar --set "$NAME" icon.color=$OVERLAY icon.background.border_color=$OVERLAY # grey — no tunnel
 fi

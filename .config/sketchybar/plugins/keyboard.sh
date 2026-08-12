@@ -4,6 +4,7 @@
 # taken here); this only renders whatever the agent last cached.
 
 source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/plugins/hover.sh"
 
 CACHE="$HOME/.cache/sketchybar/keyboard-battery"
 [ -r "$CACHE" ] || exit 0
@@ -17,7 +18,7 @@ case "$CODE" in
 esac
 
 case "$PERCENT" in
-  100|9[0-9]|8[0-9]|7[0-9]|6[0-9]|5[0-9]|4[0-9]|3[0-9]) COLOR=$TEXT ;;
+  100|9[0-9]|8[0-9]|7[0-9]|6[0-9]|5[0-9]|4[0-9]|3[0-9]) COLOR=$SAPPHIRE ;;
   2[0-9]|1[0-9])                                        COLOR=$YELLOW ;;
   *)                                                    COLOR=$RED ;;
 esac

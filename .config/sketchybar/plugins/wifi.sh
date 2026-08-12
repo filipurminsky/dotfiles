@@ -7,9 +7,10 @@
 # "wired" while actually on Wi-Fi. en0 is the built-in Wi-Fi here.
 
 source "$CONFIG_DIR/plugins/colors.sh"
+source "$CONFIG_DIR/plugins/hover.sh"
 
 if [ -n "$(ipconfig getifaddr en0 2>/dev/null)" ]; then
-  sketchybar --set "$NAME" icon="󰖩" icon.color=$TEXT
+  sketchybar --set "$NAME" icon="󰖩" icon.color=$BLUE
   exit 0
 fi
 
@@ -18,7 +19,7 @@ fi
 IFACE=$(route get default 2>/dev/null | awk '/interface:/ {print $2}')
 
 if [ -n "$IFACE" ]; then
-  sketchybar --set "$NAME" icon="󰈀" icon.color=$TEXT
+  sketchybar --set "$NAME" icon="󰈀" icon.color=$BLUE
 else
   sketchybar --set "$NAME" icon="󰖪" icon.color=$RED
 fi
