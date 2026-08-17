@@ -3,9 +3,8 @@
 #
 # Safety model: bootstrap.sh writes a manifest of what IT installed
 # (~/.local/state/dotfiles/bootstrap.manifest). Teardown only undoes those
-# entries, so anything that pre-existed — apt packages, Homebrew, Oh My Zsh,
-# your login shell — is left untouched. Tool data and cloned configs live in
-# known dotfiles-owned paths and are always removed.
+# entries, so anything that pre-existed — including cloned configs and tool
+# data — is left untouched.
 #
 # Usage: teardown.sh [-y|--yes]   (-y = don't prompt)
 set -uo pipefail
@@ -34,20 +33,33 @@ if [ -n "$orig_shell" ] && [ "$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)
   chsh -s "$orig_shell" 2>/dev/null || warn "chsh failed; run manually: chsh -s $orig_shell"
 fi
 
-# 2. Tool data + cloned configs (always created by this setup) ---------------
-for d in \
-  "$HOME/.config/zsh/plugins" \
-  "$HOME/.config/tmux/plugins" \
-  "$HOME/.config/nvim" \
-  "$HOME/.config/yazi" \
-  "$HOME/.local/share/nvim" "$HOME/.local/state/nvim" "$HOME/.cache/nvim" \
-  "$HOME/.local/share/fnm" \
-  "$HOME/.local/share/atuin" \
-  "$HOME/.cache/sketchybar" \
-  "$HOME/.config/sketchybar/bin/btbattery" \
-  "$HOME/.gitconfig.local"; do
-  [ -e "$d" ] && { info "rm $d"; rm -rf "$d"; }
-done
+# 2. Paths/files this bootstrap actually created ----------------------------
+# Older manifests have no path:/file: entries; that is intentionally treated
+# as "ownership unknown", so teardown leaks data rather than deleting it.
+if [ -f "$MANIFEST" ]; then
+while IFS= read -r entry; do
+  case "$entry" in
+    path:*)
+      target="${entry#path:}"
+      case "$target" in
+        "$HOME"/.config/zsh/plugins/*|"$HOME"/.config/tmux/plugins/*|\
+        "$HOME"/.config/nvim|"$HOME"/.config/yazi|\
+        "$HOME"/.local/share/fnm|"$HOME"/.local/share/yazi)
+          [ -e "$target" ] && { info "rm $target"; rm -rf -- "$target"; }
+          ;;
+      esac
+      ;;
+    file:*)
+      target="${entry#file:}"
+      case "$target" in
+        "$HOME"/.config/sketchybar/bin/btbattery|"$HOME"/.gitconfig.local)
+          [ -e "$target" ] && { info "rm $target"; rm -f -- "$target"; }
+          ;;
+      esac
+      ;;
+  esac
+done < "$MANIFEST"
+fi
 
 # 3. btbattery launchd timer (only if bootstrap installed it) ----------------
 # The compiled binary and its cache are removed above; this drops the timer.

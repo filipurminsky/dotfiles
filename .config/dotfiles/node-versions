@@ -1,0 +1,6 @@
+# Node versions bootstrap.sh installs via fnm, one per line.
+# Append " default" to the one that becomes the global default.
+# Blank lines and # comments are ignored. Upgrade by editing this file and
+# re-running bootstrap.sh (or `fnm install <ver>` by hand).
+20.20.2
+24.15.0 default

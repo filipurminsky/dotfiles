@@ -18,11 +18,31 @@ OS="$(uname -s)"   # Darwin | Linux
 info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Non-fatal problem: print loudly, count it, keep going. The final summary
+# reports the count and the script exits 1 so CI/unattended callers notice.
+WARNCOUNT=0
+warn() { printf '\033[1;33m!!\033[0m %s\n' "$1" >&2; WARNCOUNT=$((WARNCOUNT + 1)); }
+
+# Yes/no prompt, default No. Without a tty on stdin (CI, `ssh host bootstrap`),
+# auto-answer No: a bare `read` on closed stdin fails and `set -e` would abort
+# the whole bootstrap mid-way.
+confirm() {
+  [ -t 0 ] || { info "$1 — skipped (no tty, defaulting to No)"; return 1; }
+  local a
+  read -r -p "$1 [y/N] " a
+  [ "${a:-N}" = "y" ]
+}
+
 # Manifest of what THIS run installs, so teardown.sh reverses only these and
 # leaves anything that pre-existed untouched. One fact per line, deduped.
 MANIFEST="$HOME/.local/state/dotfiles/bootstrap.manifest"
 mkdir -p "$(dirname "$MANIFEST")"
 record() { grep -qxF "$1" "$MANIFEST" 2>/dev/null || echo "$1" >> "$MANIFEST"; }
+# Record paths only when this bootstrap run is about to create them.  Teardown
+# uses these entries as its ownership boundary and leaves pre-existing paths
+# alone.
+record_new_path() { [ -e "$1" ] || record "path:$1"; }
+record_new_file() { [ -e "$1" ] || record "file:$1"; }
 
 # Install profile: full (default) or light. See header for what each covers.
 MODE=full
@@ -90,7 +110,10 @@ info "Installing zsh plugins into $ZSH_CUSTOM/plugins"
 mkdir -p "$ZSH_CUSTOM/plugins"
 clone_plugin() {  # <repo-url> <dir>
   local dir="$ZSH_CUSTOM/plugins/$2"
-  [ -d "$dir" ] || git clone --depth=1 "$1" "$dir"
+  if [ ! -e "$dir" ]; then
+    record_new_path "$dir"
+    git clone --depth=1 "$1" "$dir"
+  fi
 }
 clone_plugin https://github.com/zsh-users/zsh-autosuggestions      zsh-autosuggestions
 clone_plugin https://github.com/zsh-users/zsh-syntax-highlighting  zsh-syntax-highlighting
@@ -100,24 +123,33 @@ clone_plugin https://github.com/jeffreytse/zsh-vi-mode             zsh-vi-mode
 #    auth prompt, so unattended runs don't block). Fall back to gh only if the
 #    public clone fails (i.e. the repo is private), authenticating then.
 clone_repo() {  # <repo> <target>
-  [ -d "$2/.git" ] && { info "$2 already present"; return; }
+  [ -e "$2" ] && { info "$2 already present"; return; }
   info "Cloning $1 -> $2"
+  record_new_path "$2"
   git clone "https://github.com/$GH_USER/$1.git" "$2" 2>/dev/null && return
   if have gh; then
     info "Public clone failed (private repo?) — authenticating with gh"
-    gh auth status >/dev/null 2>&1 || gh auth login
-    gh repo clone "$GH_USER/$1" "$2"
+    # gh auth login is interactive; only attempt it with a tty.
+    if gh auth status >/dev/null 2>&1 || { [ -t 0 ] && gh auth login; }; then
+      gh repo clone "$GH_USER/$1" "$2" && return
+    fi
   fi
+  warn "clone of $1 failed — $2 is missing; later steps that need it will misbehave. Fix: gh repo clone $GH_USER/$1 $2"
 }
 
 # 6. Neovim + yazi configs (their own repos) --------------------------------
 clone_repo nvim-config "$HOME/.config/nvim"
 clone_repo yazi-config "$HOME/.config/yazi"
-if have ya; then info "Installing yazi packages"; ya pkg install || true; fi
+if have ya; then
+  record_new_path "$HOME/.local/share/yazi"
+  info "Installing yazi packages"
+  ya pkg install || true
+fi
 
 # 7. tmux: TPM + plugins ----------------------------------------------------
 TPM="$HOME/.config/tmux/plugins/tpm"
 if [ ! -d "$TPM" ]; then
+  record_new_path "$TPM"
   info "Installing TPM"
   git clone --depth=1 https://github.com/tmux-plugins/tpm "$TPM"
 fi
@@ -129,18 +161,27 @@ tmux new-session -d -s __tpm_install 2>/dev/null || true
 tmux kill-session -t __tpm_install 2>/dev/null || true
 
 # 8. Node versions via fnm (full only) --------------------------------------
-if [ "$MODE" = full ] && have fnm; then
-  info "Installing Node versions via fnm"
+# Versions live in node-versions next to this script, not hardcoded here —
+# edit that file to upgrade, then re-run.
+NODE_VERSIONS="$HOME/.config/dotfiles/node-versions"
+if [ "$MODE" = full ] && have fnm && [ -f "$NODE_VERSIONS" ]; then
+  record_new_path "$HOME/.local/share/fnm"
+  info "Installing Node versions via fnm (from node-versions)"
   eval "$(fnm env)"
-  fnm install 20.20.2 || true
-  fnm install 24.15.0 || true
-  fnm default 24.15.0 || true
+  while read -r ver tag _; do
+    case "$ver" in ''|\#*) continue ;; esac
+    fnm install "$ver" || warn "fnm install $ver failed"
+    if [ "$tag" = default ]; then
+      fnm default "$ver" || warn "fnm default $ver failed"
+    fi
+  done < "$NODE_VERSIONS"
 fi
 
 # 9. SDKMAN (optional, full only) -------------------------------------------
 if [ "$MODE" = full ] && [ ! -d "$HOME/.sdkman" ]; then
-  read -r -p "Install SDKMAN (Java/Gradle/Maven)? [y/N] " a
-  if [ "${a:-N}" = "y" ]; then record "sdkman"; curl -s "https://get.sdkman.io" | bash; fi
+  if confirm "Install SDKMAN (Java/Gradle/Maven)?"; then
+    record "sdkman"; curl -s "https://get.sdkman.io" | bash
+  fi
 fi
 
 # 10. Sqlit (full only) ------------------------------------------------------
@@ -158,8 +199,7 @@ fi
 # 11. Default login shell -> zsh (servers default to bash) ------------------
 ZSH_BIN="$(command -v zsh || true)"
 if [ -n "$ZSH_BIN" ] && [ "${SHELL:-}" != "$ZSH_BIN" ]; then
-  read -r -p "Set zsh ($ZSH_BIN) as your login shell? [y/N] " a
-  if [ "${a:-N}" = "y" ]; then
+  if confirm "Set zsh ($ZSH_BIN) as your login shell?"; then
     record "shell:$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || echo "${SHELL:-}")"
     grep -qx "$ZSH_BIN" /etc/shells || echo "$ZSH_BIN" | sudo tee -a /etc/shells >/dev/null
     chsh -s "$ZSH_BIN"
@@ -168,10 +208,15 @@ fi
 
 # 12. Machine-local git identity -------------------------------------------
 if [ ! -f "$HOME/.gitconfig.local" ]; then
-  info "Creating ~/.gitconfig.local (git identity — not tracked)"
-  read -r -p "  git user.name:  " name
-  read -r -p "  git user.email: " email
-  printf '[user]\n\tname = %s\n\temail = %s\n' "$name" "$email" > "$HOME/.gitconfig.local"
+  if [ -t 0 ]; then
+    record_new_file "$HOME/.gitconfig.local"
+    info "Creating ~/.gitconfig.local (git identity — not tracked)"
+    read -r -p "  git user.name:  " name
+    read -r -p "  git user.email: " email
+    printf '[user]\n\tname = %s\n\temail = %s\n' "$name" "$email" > "$HOME/.gitconfig.local"
+  else
+    warn "no tty — skipped ~/.gitconfig.local; commits have no identity until you create it"
+  fi
 fi
 
 # 13. macOS desktop: aerospace + sketchybar + borders (full, Darwin only) ---
@@ -185,6 +230,7 @@ if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
 
   if [ -f "$SB/bin/btbattery.swift" ]; then
     if have swiftc; then
+      record_new_file "$SB/bin/btbattery"
       info "Building btbattery (Bluetooth keyboard battery helper)"
       # -sectcreate embeds Info.plist in the binary. Required, not cosmetic:
       # TCC reads NSBluetoothAlwaysUsageDescription from the __info_plist
@@ -192,9 +238,9 @@ if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
       ( cd "$SB/bin" && swiftc -O btbattery.swift -o btbattery \
           -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist \
           -Xlinker btbattery-Info.plist ) \
-        || echo "!! btbattery build failed — the keyboard battery item stays blank" >&2
+        || warn "btbattery build failed — the keyboard battery item stays blank"
     else
-      echo "!! swiftc not found (install Xcode CLT) — skipping btbattery build" >&2
+      warn "swiftc not found (install Xcode CLT) — skipping btbattery build"
     fi
   fi
 
@@ -224,4 +270,9 @@ info "Done. Open a new shell. Optional: 'atuin import auto' (history), 'atuin lo
 if [ "$OS" = "Darwin" ]; then
   info "macOS: grant AeroSpace Accessibility access when prompted (System Settings"
   info "  > Privacy & Security > Accessibility) — it cannot manage windows without it."
+fi
+# Exit 1 on warnings so unattended callers (CI) notice partial bootstraps.
+if [ "$WARNCOUNT" -gt 0 ]; then
+  printf '\033[1;33m!!\033[0m bootstrap finished with %d warning(s) — see !! lines above\n' "$WARNCOUNT" >&2
+  exit 1
 fi

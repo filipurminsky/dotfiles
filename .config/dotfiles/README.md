@@ -75,8 +75,9 @@ Reverse everything `bootstrap.sh` installed and leave the machine as it was:
 ```
 It reads a manifest `bootstrap.sh` writes (`~/.local/state/dotfiles/bootstrap.manifest`)
 and only removes what *it* installed — **pre-existing apt packages, Homebrew, Oh My
-Zsh, and your login shell are preserved**. Tool data and cloned configs (nvim/yazi,
-plugins, fnm) are always removed; the dotfiles checkout itself is removed on confirm.
+Zsh, login shell, cloned configs, and tool data are preserved**. For manifests created
+by older versions, ownership is unknown, so teardown leaves those paths in place; the
+dotfiles checkout itself is removed on confirm.
 
 ## Day-to-day
 Use the `dotfiles` alias like `git`:
