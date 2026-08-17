@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Status light only. The SSID is unavailable to a CLI process on macOS 26
-# (Location Services gated), and the local IP isn't wanted on screen.
+# The SSID comes from WiFiSSIDHelper, a native app with Location Services
+# permission. SketchyBar itself only reads its cache so it stays lightweight.
 #
 # Check the physical interface first: under a full-tunnel VPN the default
 # route moves onto a utun device, which a route-based check misreads as
@@ -9,8 +9,18 @@
 source "$CONFIG_DIR/plugins/colors.sh"
 source "$CONFIG_DIR/plugins/hover.sh"
 
+SSID_CACHE="$HOME/.cache/sketchybar/wifi-ssid"
+SSID=""
+if [ -r "$SSID_CACHE" ]; then
+  SSID=$(tr -d '\r\n' < "$SSID_CACHE" | cut -c1-32)
+fi
+
 if [ -n "$(ipconfig getifaddr en0 2>/dev/null)" ]; then
-  sketchybar --set "$NAME" icon="󰖩" icon.color=$BLUE
+  if [ -n "$SSID" ]; then
+    sketchybar --set "$NAME" icon="󰖩" icon.color=$BLUE label="$SSID" label.drawing=on
+  else
+    sketchybar --set "$NAME" icon="󰖩" icon.color=$BLUE label.drawing=off
+  fi
   exit 0
 fi
 
@@ -19,7 +29,7 @@ fi
 IFACE=$(route get default 2>/dev/null | awk '/interface:/ {print $2}')
 
 if [ -n "$IFACE" ]; then
-  sketchybar --set "$NAME" icon="󰈀" icon.color=$BLUE
+  sketchybar --set "$NAME" icon="󰈀" icon.color=$BLUE label.drawing=off
 else
-  sketchybar --set "$NAME" icon="󰖪" icon.color=$RED
+  sketchybar --set "$NAME" icon="󰖪" icon.color=$RED label.drawing=off
 fi

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Current condition + temperature from wttr.in (no API key needed).
-# Location is IP-based when CITY is empty — note the corporate VPN can shift
-# that to the tunnel's egress city, so pin CITY if readings look foreign.
+# Current condition + temperature from Open-Meteo (no API key needed).
+# Use fixed coordinates rather than IP geolocation: a VPN can otherwise make
+# the bar report weather from its tunnel's egress location.
 #
 # Order matters here: the last good reading is painted from cache *before*
 # the network fetch, so a bar reload shows weather instantly instead of a
@@ -14,7 +14,8 @@
 source "$CONFIG_DIR/plugins/colors.sh"
 source "$CONFIG_DIR/plugins/hover.sh"
 
-CITY=""   # e.g. "Bratislava" — URL-encode spaces as +
+LATITUDE="48.1486"    # Bratislava II
+LONGITUDE="17.1077"
 
 CACHE="$HOME/.cache/sketchybar/weather"
 MAX_AGE_MIN=180   # stale cache beyond this is worse than no item
@@ -37,6 +38,19 @@ render() {  # $1 = "Condition|+21°C"
   sketchybar --set "$NAME" drawing=on icon="$icon" icon.color=$YELLOW label="$temp"
 }
 
+condition_from_wmo_code() {
+  case "$1" in
+    0) echo "Clear" ;;
+    1|2|3) echo "Cloudy" ;;
+    45|48) echo "Fog" ;;
+    51|53|55|56|57) echo "Drizzle" ;;
+    61|63|65|66|67|80|81|82) echo "Rain" ;;
+    71|73|75|77|85|86) echo "Snow" ;;
+    95|96|99) echo "Thunderstorm" ;;
+    *) echo "Cloudy" ;;
+  esac
+}
+
 # 1. Paint the cached reading immediately, if it's fresh enough.
 PAINTED=no
 if [ -f "$CACHE" ]; then
@@ -49,10 +63,18 @@ fi
 # Nothing to paint yet — hide rather than show an empty pill.
 [ "$PAINTED" = yes ] || sketchybar --set "$NAME" drawing=off
 
-# 2. Fetch fresh. ?m forces metric regardless of what the IP looks like.
-# wttr.in serves some failures as HTTP 200 with an HTML body, so also
-# require the | separator. On failure, whatever step 1 painted stands.
-RESP=$(curl -sf --max-time 5 "https://wttr.in/${CITY}?m&format=%C|%t" 2>/dev/null)
+# 2. Fetch fresh. The coordinates make the source independent of VPN routing.
+# On failure, whatever step 1 painted stands.
+JSON=$(curl -sf --max-time 5 "https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,weather_code&timezone=Europe%2FBratislava" 2>/dev/null)
+RAW=$(printf '%s' "$JSON" | jq -r '.current | "\(.weather_code)|\(.temperature_2m)"' 2>/dev/null)
+case "$RAW" in
+  *'|'*)
+    CODE="${RAW%%|*}"
+    TEMP="${RAW##*|}"
+    RESP="$(condition_from_wmo_code "$CODE")|${TEMP}°C"
+    ;;
+  *) RESP="" ;;
+esac
 case "$RESP" in
   *'|'*)
     mkdir -p "${CACHE%/*}"

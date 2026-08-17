@@ -20,8 +20,8 @@ APPFONT="sketchybar-app-font"
 # display. Do NOT add notch_display_height here — it is the bar's height on
 # the notched display, not a display selector, so a value like 1117 makes the
 # bar swallow the screen. --query bar does not report either back.
-# Flush to the screen edges; translucent BASE90 + blur let wallpaper glow
-# through. AeroSpace's outer.top=0 relies on the menu-bar reservation covering
+# Flush to the screen edges; opaque BASE matches Ghostty's Catppuccin Mocha
+# terminal background exactly. AeroSpace's outer.top=0 relies on the menu-bar reservation covering
 # the bar's height — grow it and windows slide under the bar.
 sketchybar --bar \
   height=32 \
@@ -29,7 +29,7 @@ sketchybar --bar \
   sticky=on \
   padding_left=8 \
   padding_right=8 \
-  color=$BASE90 \
+  color=$BASE \
   blur_radius=30 \
   shadow=off \
   topmost=window \
@@ -237,7 +237,7 @@ sketchybar --add item volume right \
     click_script="open 'x-apple.systempreferences:com.apple.Sound-Settings.extension'" \
     script="$PLUGIN_DIR/volume.sh"
 
-# Icon only — no SSID (Location Services gated on macOS 26) and no IP.
+# SSID is supplied by the WiFiSSIDHelper native app (Location Services gated).
 sketchybar --add item wifi right \
   --subscribe wifi wifi_change system_woke mouse.entered mouse.exited \
   --set wifi \

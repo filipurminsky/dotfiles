@@ -19,15 +19,20 @@
 [push]
 	autoSetupRemote = true
 	default = current
+	followTags = true
 [fetch]
 	prune = true
 [rebase]
 	autostash = true
+	updateRefs = true
 [rerere]
 	enabled = true
 [diff]
 	algorithm = histogram
 	tool = nvimdiff
+	colorMoved = default
+[commit]
+	verbose = true
 [branch]
 	sort = -committerdate
 [column]
