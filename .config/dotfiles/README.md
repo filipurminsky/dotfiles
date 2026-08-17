@@ -9,10 +9,22 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - `.gitconfig` (identity is in the untracked `~/.gitconfig.local`)
 - `.config/tmux/tmux.conf`
 - `.config/atuin/config.toml`
+- `.config/git/ignore` (global excludes: `.DS_Store` and friends, every repo)
+- `.config/btop/` (`btop.conf` + a hand-built `catppuccin_mocha.theme`, since
+  the Homebrew formula ships no Catppuccin variant)
+- `.config/lazygit/config.yml`
 - `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks/fonts)
 - `.config/dotfiles/` (this README + `bootstrap.sh`)
 - macOS desktop: `.config/aerospace/` (tiling WM), `.config/sketchybar/` (bar +
   plugins), `.config/borders/` — see the note below on the one build artefact
+
+## Deliberately NOT tracked
+- `~/.ssh/` — excluded wholesale in `~/.gitignore`. This repo is public and
+  `status.showUntrackedFiles no` hides mistakes, so a stray `dotfiles add -A`
+  from `$HOME` is the one accident that must never reach a remote.
+- `.config/tmuxp/` — session templates whose `start_directory` paths name
+  employer repos. In `.dotfiles/info/exclude` (repo-local) rather than
+  `~/.gitignore`, because here the pattern itself is what leaks.
 
 ## What lives in its own repo (cloned by bootstrap)
 - Neovim → [`nvim-config`](https://github.com/filipurminsky/nvim-config) → `~/.config/nvim`

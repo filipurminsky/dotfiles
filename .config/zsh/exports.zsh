@@ -30,9 +30,21 @@ export PATH="$HOME/.local/bin:$PATH"
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
-export FZF_DEFAULT_OPTS='--height 40% --layout reverse --border'
+# Catppuccin Mocha, to match ghostty/tmux/nvim/yazi. Without an explicit
+# --color fzf falls back to the terminal's 16 ANSI slots, which leaves the
+# prompt/pointer/highlight colors visibly off-palette against everything else.
+export FZF_DEFAULT_OPTS='--height 40% --layout reverse --border
+  --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
+  --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
+  --color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
+  --color=selected-bg:#45475a
+  --color=border:#6c7086,label:#cdd6f4'
 export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range :200 {}'"
 export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always --level=2 {}'"
 
 # --- bat -------------------------------------------------------------------
-export BAT_THEME="ansi"
+# bat ships Catppuccin as a builtin theme (bat >= 0.25), so this needs no
+# theme file. Previously "ansi", which tracked the terminal palette and so
+# looked right in Ghostty but wrong anywhere the 16 ANSI colors differ — and
+# it gave delta (which uses this same syntax theme) muted diff highlighting.
+export BAT_THEME="Catppuccin Mocha"

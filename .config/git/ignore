@@ -1,0 +1,25 @@
+# Global git excludes (XDG path; git reads this with no core.excludesFile set).
+#
+# Applies to EVERY repo on this machine, so keep it to machine/OS noise that no
+# project should ever track. Project-specific rules belong in that project's
+# .gitignore; dotfiles-repo rules belong in ~/.gitignore.
+
+# Claude Code per-project local settings — machine-local, never shared
+**/.claude/settings.local.json
+
+# macOS Finder metadata. Written into any directory Finder or a file dialog
+# touches, so it turns up in checkouts without anyone opening Finder directly.
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnail and directory metadata from other platforms, for repos shared with
+# Windows/Linux collaborators
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor swap/undo files
+*.swp
+*.swo
+.~lock.*#

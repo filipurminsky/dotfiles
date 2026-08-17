@@ -12,6 +12,13 @@
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
+# NOTE: ZSH_DISABLE_COMPFIX=true is deliberately NOT set. It skips Oh My Zsh's
+# compaudit check for group/world-writable fpath dirs, and is widely cited as a
+# startup win — but measured here (20 warm runs, A/B via ZDOTDIR) it saves only
+# ~8ms of CPU per shell, which does not pay for losing the check. Startup is
+# ~200ms and dominated by _omz_source, not compaudit; look there first if this
+# ever needs trimming.
+
 # Keep personal customizations OUTSIDE the OMZ install (which is its own git
 # repo) so they can be tracked in the dotfiles repo. Must be set before
 # sourcing oh-my-zsh.sh. Plugins/completions/themes live here too.

@@ -84,9 +84,10 @@ outer.bottom     = 0
 alt-enter = 'exec-and-forget open -a /Applications/Ghostty.app'
 
 # Focus / move  (i3 convention)
-# NOTE: alt-shift-h and alt-shift-l shadow tmux's M-H / M-L (previous/next
-# window) in ~/.config/tmux/tmux.conf:29-30 — AeroSpace wins, so rebind those
-# in tmux.
+# NOTE: AeroSpace grabs alt-hjkl and alt-shift-hjkl globally, so a terminal app
+# can never see them. tmux window nav was on M-H/M-L and therefore dead; it now
+# uses M-n/M-p (see ~/.config/tmux/tmux.conf). Keep terminal-side Alt bindings
+# clear of this block.
 alt-h = 'focus left'
 alt-j = 'focus down'
 alt-k = 'focus up'

@@ -9,6 +9,11 @@
 	navigate = true
 	line-numbers = true
 	side-by-side = false
+	; delta highlights syntax through bat's theme engine. Naming the theme here
+	; rather than relying on $BAT_THEME keeps diffs on-palette when git runs the
+	; pager outside an interactive shell (lazygit popups, IDE terminals, hooks),
+	; where exports.zsh has never been sourced.
+	syntax-theme = Catppuccin Mocha
 [merge]
 	conflictStyle = zdiff3
 	tool = nvimdiff

@@ -9,6 +9,12 @@
 # targeted deny-list. Add new tools as you adopt them.
 
 # ── Credentials in tool configs — never track ────────────────────────
+# SSH private keys, plus a config whose Host entries name private
+# infrastructure. The whole directory, not a *.pem/id_* pattern: a new key type
+# or a stray *.key would slip past a narrower rule, and this is the one
+# directory in $HOME where a mistaken `add -A` is unrecoverable — the key is
+# public the moment it is pushed.
+.ssh/
 # lazysql embeds DB passwords directly in the connection URL
 .config/lazysql/config.toml
 .config/lazysql/history/
