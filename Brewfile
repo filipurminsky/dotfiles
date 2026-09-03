@@ -122,7 +122,7 @@ brew "uv"
 # Pager / text-based web browser (renders HTML email in aerc)
 brew "w3m"
 # Blazing fast terminal file manager written in Rust, based on async I/O
-# Use Homebrew's stable release so plugin APIs do not change unexpectedly.
+# Pinned to stable formula (not HEAD) to prevent breaking plugin API changes
 brew "yazi"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
