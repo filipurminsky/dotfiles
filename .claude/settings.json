@@ -88,5 +88,37 @@
   "tui": "fullscreen",
   "theme": "dark",
   "editorMode": "vim",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(terraform apply:*) in infra/terraform — Protected-Scope IaC Apply given prod.env/prod.secrets.env config present",
+      "Writes to apps/*/runtime-configuration/prod.secrets.env or prod.env"
+    ],
+    "environment": [
+      "### Org-wide",
+      "**Organization**: gohealth-engineering (Bitbucket org; from origin remote bitbucket.org:gohealth-engineering/conversational-intelligence-platform.git)",
+      "**Cloud provider(s)**: AWS (aws CLI used in-project 9× and in shell history 143×; internal hosts and bucket names are AWS-flavored)",
+      "**Repository visibility**: assume private (Bitbucket remote for gohealth-engineering; not queryable via gh since origin is not github.com)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: main (default branch; protection status not queryable — origin is not github.com)",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: Bitbucket repo gohealth-engineering/conversational-intelligence-platform (origin) only — no additional orgs configured",
+      "**Trusted internal domains**: cip-core.qa.internal.gohealth.net, cip-core.uat.internal.gohealth.net",
+      "**Trusted cloud buckets**: gh-cip-uat-gohealth-7512d900 (config-derived — not a confirmed upload destination; uploads of local data still require confirmation)",
+      "**Key internal services**: cip-core.qa.internal.gohealth.net, cip-core.uat.internal.gohealth.net",
+      "**Internal package registry**: nexus.dev.norvax.net",
+      "**Sensitive data locations & audiences**: .env and runtime-configuration secrets files (apps/aqa-dashboard, apps/cip-core, apps/cip-call-data-parser, apps/cip-call-insights, apps/cip-local-sqs-worker — prod.env, prod.secrets.env, qa.secrets.env, uat.secrets.env), apps/cip-core/migrations/0026_increase_encrypted_data_longblob.sql (encrypted data schema); share only with audiences cleared at the [named+specifics] bar",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries prod or production as a whole word or name segment; also apps/*/runtime-configuration/prod.env, prod.secrets.env, and apps/aqa-dashboard/scripts/start-as-prod.sh",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic (note: k8s namespaces migrate-llm-qa-qa-to-uat and migrate-qa-to-uat seen in use are QA/UAT migration namespaces, not prod)",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries prod or production as a whole word or name segment (infra/terraform present in repo)",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development (Conversational Intelligence Platform monorepo — Node/TypeScript services, Terraform infra)",
+      "**Trusted repo**: /Users/filipurminsky/git/conversational-intelligence-platform and its origin remote (bitbucket.org:gohealth-engineering/conversational-intelligence-platform.git)",
+      "**Org-specific CLIs**: None configured"
+    ]
+  }
 }
