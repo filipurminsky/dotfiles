@@ -118,3 +118,5 @@ __pycache__/
 .local/bin/agy.*.old
 .local/bin/sqlit
 .local/bin/sqlit-tui
+# Work-specific auto-mode rules split out of settings.json; never published
+.claude/automode.private.json
