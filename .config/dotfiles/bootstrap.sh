@@ -192,7 +192,7 @@ if [ "$MODE" = full ] && have uv; then
   if ! uv tool list | grep -q '^sqlit-tui '; then
     record "uvtool:sqlit-tui"
     info "Installing Sqlit with MySQL support"
-    uv tool install 'sqlit-tui==1.5.2' --with PyMySQL
+    uv tool install 'sqlit-tui==1.6.5' --with PyMySQL
   fi
 fi
 
