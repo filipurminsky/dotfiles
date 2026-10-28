@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # JankyBorders — Catppuccin Mocha
-# Started by AeroSpace's after-startup-command.
+# Supervised by the desktop launch agent.
 
 options=(
   style=round

@@ -10,11 +10,10 @@ start-at-login = true
 # defaults to none. Without this, empty workspaces vanish from the bar.
 persistent-workspaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-# borders + sketchybar are started by AeroSpace itself, so do NOT also run
-# `brew services start sketchybar` / `borders` — you'd get two instances.
+# launchd restarts the bar, borders and mic watcher after a crash. This
+# installer waits for existing instances instead of restarting them.
 after-startup-command = [
-  'exec-and-forget /opt/homebrew/bin/borders',
-  'exec-and-forget /opt/homebrew/bin/sketchybar',
+  'exec-and-forget /bin/sh -c "$HOME/.config/dotfiles/desktop-services.sh"',
 ]
 
 # Tell sketchybar which workspace is focused. This is a single argv array
@@ -137,7 +136,8 @@ alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
 alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
 
 alt-tab = 'workspace-back-and-forth'
-alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+# Workspaces are deliberately pinned below; moving one to a monitor would
+# have no effect. Use alt-ctrl-h/l to focus a different monitor instead.
 
 # Sub-modes
 alt-r = 'mode resize'

@@ -81,6 +81,16 @@ if manifest_has "launchagent:com.filipurminsky.sketchybar-wifi-ssid" && [ -f "$W
   rm -f "$WIFI_AGENT"
 fi
 
+for service in sketchybar borders micstatus; do
+  label="com.filipurminsky.desktop.$service"
+  agent="$HOME/Library/LaunchAgents/$label.plist"
+  if manifest_has "launchagent:$label" && [ -f "$agent" ]; then
+    info "Unloading $label"
+    launchctl bootout "gui/$UID/$label" 2>/dev/null || true
+    rm -f "$agent"
+  fi
+done
+
 # 4. Sqlit (only if bootstrap installed it) ----------------------------------
 if manifest_has "uvtool:sqlit-tui" && have uv; then
   info "Removing Sqlit"

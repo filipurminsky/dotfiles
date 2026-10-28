@@ -12,13 +12,13 @@ MUTED=$(osascript -e 'output muted of (get volume settings)' 2>/dev/null)
 [ -z "$VOL" ] && exit 0
 
 if [ "$MUTED" = "true" ] || [ "$VOL" -eq 0 ]; then
-  ICON="󰝟"; COLOR=$OVERLAY
+  ICON="󰝟"; COLOR="$OVERLAY"
 elif [ "$VOL" -gt 60 ]; then
-  ICON="󰕾"; COLOR=$PINK
+  ICON="󰕾"; COLOR="$PINK"
 elif [ "$VOL" -gt 20 ]; then
-  ICON="󰖀"; COLOR=$PINK
+  ICON="󰖀"; COLOR="$PINK"
 else
-  ICON="󰕿"; COLOR=$PINK
+  ICON="󰕿"; COLOR="$PINK"
 fi
 
 sketchybar --set "$NAME" icon="$ICON" icon.color="$COLOR" label="${VOL}%"

@@ -6,17 +6,27 @@
 # passes #{pane_id} so we know which pane to send the cd to - the popup itself
 # is a throwaway pane and cd'ing it would accomplish nothing.
 
-pane=$1
+pane=${1:-}
 [ -n "$pane" ] || { yazi; exit; }
 
 cwd_file=$(mktemp) || exit 1
-trap 'rm -f "$cwd_file"' EXIT INT TERM
+trap 'rm -f "$cwd_file"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-yazi --cwd-file="$cwd_file"
+yazi --cwd-file="$cwd_file" || exit "$?"
 
 cwd=$(cat "$cwd_file")
 # Skip when yazi never wrote a cwd, or nothing moved - keeps a no-op `cd` out
 # of shell history when the popup is used just to look around.
 [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] || exit 0
 
-tmux send-keys -t "$pane" "cd \"$cwd\"" Enter
+# Only type at a shell prompt, never into Neovim, an SSH client, or a TUI.
+command=$(tmux display-message -p -t "$pane" '#{pane_current_command}') || exit 0
+case "$command" in zsh|bash|sh|fish|dash|ksh) ;; *) exit 0 ;; esac
+case "$cwd" in /*) ;; *) exit 0 ;; esac
+# A single-quoted shell word with embedded apostrophes escaped. -l prevents
+# send-keys from interpreting directory names as key names.
+quoted=$(printf '%s' "$cwd" | sed "s/'/'\\\\''/g")
+tmux send-keys -l -t "$pane" "cd -- '$quoted'"
+tmux send-keys -t "$pane" Enter

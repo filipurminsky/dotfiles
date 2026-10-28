@@ -220,11 +220,8 @@ if [ ! -f "$HOME/.gitconfig.local" ]; then
 fi
 
 # 13. macOS desktop: aerospace + sketchybar + borders (full, Darwin only) ---
-# The three tools need no service management here: aerospace.toml sets
-# start-at-login, and its after-startup-command execs borders and sketchybar,
-# so launching aerospace once brings up the whole bar. What does need doing is
-# the part the repo deliberately does not vendor — the btbattery binary — plus
-# the launchd timer that drives it.
+# AeroSpace registers itself at login. launchd supervises SketchyBar, borders
+# and the mic watcher; helpers are compiled before their agents are installed.
 if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
   SB="$HOME/.config/sketchybar"
 
@@ -303,8 +300,16 @@ if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
       || launchctl load "$AGENT" 2>/dev/null || true
   fi
 
-  # First launch registers the start-at-login item and pulls up borders and
-  # sketchybar via after-startup-command.
+  if [ -x "$HOME/.config/dotfiles/desktop-services.sh" ]; then
+    info "Installing desktop service supervisors"
+    "$HOME/.config/dotfiles/desktop-services.sh" \
+      || warn "desktop supervisor installation failed"
+    for service in sketchybar borders micstatus; do
+      record "launchagent:com.filipurminsky.desktop.$service"
+    done
+  fi
+
+  # First launch registers AeroSpace's start-at-login item.
   if [ -d "/Applications/AeroSpace.app" ] && ! pgrep -x AeroSpace >/dev/null 2>&1; then
     info "Launching AeroSpace (registers start-at-login, starts the bar)"
     open -a AeroSpace || true

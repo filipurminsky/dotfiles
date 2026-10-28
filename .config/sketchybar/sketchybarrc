@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # sketchybar — Catppuccin Mocha, driven by AeroSpace
-# Started by AeroSpace's after-startup-command; do not also use brew services.
+# Supervised by launchd; do not also use brew services.
 
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 PLUGIN_DIR="$CONFIG_DIR/plugins"
@@ -13,7 +13,6 @@ source "$PLUGIN_DIR/colors.sh"
 # Regular) — asking for NFM:ExtraBold silently falls back to a face with no
 # Nerd Font glyphs, which renders every icon as tofu.
 FONT="JetBrainsMono NFM"
-APPFONT="sketchybar-app-font"
 
 ##### Bar #####
 # notch_width reserves a gap so centre items clear the notch on the built-in
@@ -35,7 +34,7 @@ sketchybar --bar \
   sticky=on \
   padding_left=8 \
   padding_right=26 \
-  color=$BASE \
+  color="$BASE" \
   blur_radius=30 \
   shadow=off \
   topmost=window \
@@ -45,19 +44,19 @@ sketchybar --bar \
 sketchybar --default \
   updates=when_shown \
   icon.font="$FONT:Bold:16.0" \
-  icon.color=$TEXT \
+  icon.color="$TEXT" \
   icon.padding_left=6 \
   icon.padding_right=4 \
   label.font="$FONT:Medium:13.0" \
-  label.color=$TEXT \
+  label.color="$TEXT" \
   label.padding_left=4 \
   label.padding_right=6 \
   background.corner_radius=5 \
   background.height=22 \
-  popup.background.color=$MANTLE \
+  popup.background.color="$MANTLE" \
   popup.background.corner_radius=6 \
   popup.background.border_width=1 \
-  popup.background.border_color=$LINE \
+  popup.background.border_color="$LINE" \
   popup.background.shadow.drawing=on \
   popup.blur_radius=20 \
   popup.horizontal=off \
@@ -81,7 +80,7 @@ sketchybar --add item apple.logo left \
   --set apple.logo \
     icon="$APPLE" \
     icon.font="$FONT:Bold:20.0" \
-    icon.color=$BLUE \
+    icon.color="$BLUE" \
     icon.padding_left=10 \
     icon.padding_right=10 \
     label.drawing=off \
@@ -116,32 +115,22 @@ WORKSPACES=$(aerospace list-workspaces --all 2>/dev/null)
 
 # The items carry no script of their own — plugins/spaces.sh sets all of them
 # in one pass, so a workspace switch costs one process instead of nine.
-SPACE_ITEMS=""
-for sid in $WORKSPACES; do
-  sketchybar --add item "space.$sid" left \
-    --subscribe "space.$sid" mouse.entered mouse.exited \
-    --set "space.$sid" \
-      script="$PLUGIN_DIR/space_hover.sh" \
-      icon="$sid" \
-      icon.font="$FONT:Bold:13.0" \
-      icon.padding_left=9 \
-      icon.padding_right=5 \
-      label.font="$APPFONT:Regular:15.0" \
-      label.padding_right=9 \
-      label.drawing=off \
-      background.color=$BLUE \
-      background.drawing=off \
-      drawing=off \
-      click_script="aerospace workspace $sid"
-  SPACE_ITEMS="$SPACE_ITEMS space.$sid"
-done
+source "$PLUGIN_DIR/workspace-item.sh"
+SPACE_ITEMS=()
+args=()
+while IFS= read -r sid; do
+  [ -n "$sid" ] || continue
+  add_workspace "$sid"
+  SPACE_ITEMS+=("space.$sid")
+done <<< "$WORKSPACES"
+sketchybar "${args[@]}"
 
 # One pill behind the whole workspace strip; the focused workspace's blue
 # background draws on top of it. Brackets auto-resize as members hide/show.
-sketchybar --add bracket spaces $SPACE_ITEMS \
+sketchybar --add bracket spaces "${SPACE_ITEMS[@]}" \
   --set spaces \
     background.drawing=on \
-    background.color=$SURFACE0 \
+    background.color="$SURFACE0" \
     background.corner_radius=5 \
     background.height=22
 
@@ -150,7 +139,7 @@ sketchybar --add bracket spaces $SPACE_ITEMS \
 # almost always does); the poll only mops up background windows appearing or
 # vanishing without a focus change, so it can be slow.
 sketchybar --add item spaces_driver left \
-  --subscribe spaces_driver aerospace_workspace_change front_app_switched \
+  --subscribe spaces_driver aerospace_workspace_change front_app_switched display_change system_woke \
   --set spaces_driver \
     drawing=off \
     updates=on \
@@ -165,10 +154,10 @@ sketchybar --add item front_app left \
   --set front_app \
     icon.drawing=off \
     label.font="$FONT:Bold:13.0" \
-    label.color=$BLUE \
+    label.color="$BLUE" \
     padding_left=10 \
     background.drawing=on \
-    background.color=$SURFACE0 \
+    background.color="$SURFACE0" \
     script="$PLUGIN_DIR/front_app.sh"
 
 ##### Right side — added right to left #####
@@ -181,9 +170,9 @@ sketchybar --add item front_app left \
 # icon colours are state signals (yellow/red battery, red wifi, VPN green).
 sketchybar --default \
   label.font="$FONT:Bold:13.0" \
-  label.color=$BLUE \
+  label.color="$BLUE" \
   background.drawing=on \
-  background.color=$SURFACE0
+  background.color="$SURFACE0"
 
 # padding_left on each item below is the visual gap between groups; wifi and
 # vpn carry none so they read as one network cluster.
@@ -193,11 +182,11 @@ sketchybar --add item clock right \
     update_freq=15 \
     padding_left=6 \
     icon="󰥔" \
-    icon.color=$MAUVE \
+    icon.color="$MAUVE" \
     click_script="open -a Calendar" \
     script="$PLUGIN_DIR/clock.sh"
 
-# wttr.in over the network, so: long poll (weather is slow-moving data) and
+# Open-Meteo over the network, so: long poll (weather is slow-moving data) and
 # system_woke/wifi_change to re-fetch after sleep or a network flip. The
 # plugin paints its cached reading first so reloads show weather instantly,
 # then fetches fresh; it hides itself only when it has nothing at all to
@@ -253,7 +242,7 @@ sketchybar --add item mic right \
     padding_left=6 \
     drawing=off \
     icon="󰍬" \
-    icon.color=$PEACH \
+    icon.color="$PEACH" \
     icon.padding_left=8 \
     icon.padding_right=8 \
     label.drawing=off \
@@ -289,7 +278,7 @@ sketchybar --add item vpn right \
     label.drawing=off \
     background.drawing=off \
     icon="VPN" \
-    icon.font="$FONT:ExtraBold:9.0" \
+    icon.font="$FONT:Bold:9.0" \
     icon.background.drawing=on \
     icon.background.corner_radius=4 \
     icon.background.border_width=1 \
@@ -305,16 +294,13 @@ sketchybar --add item vpn right \
 sketchybar --add bracket network wifi vpn \
   --set network \
     background.drawing=on \
-    background.color=$SURFACE0 \
+    background.color="$SURFACE0" \
     background.corner_radius=5 \
     background.height=22
 
 ##### Go #####
-# One resident CoreAudio listener behind the mic item. sketchybarrc re-runs on
-# every reload, so clear the previous one first; the watcher outlives this
-# script as an orphan, which is what keeps the item live between reloads.
-pkill -f "$CONFIG_DIR/bin/micstatus --watch" 2>/dev/null
-[ -x "$CONFIG_DIR/bin/micstatus" ] && \
-  ("$CONFIG_DIR/bin/micstatus" --watch >/dev/null 2>&1 &)
+# launchd supervises the desktop services and mic watcher. The installer is
+# idempotent and adopts existing processes without interrupting them.
+"$HOME/.config/dotfiles/desktop-services.sh"
 
 sketchybar --update

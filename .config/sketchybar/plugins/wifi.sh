@@ -11,15 +11,15 @@ source "$CONFIG_DIR/plugins/hover.sh"
 
 SSID_CACHE="$HOME/.cache/sketchybar/wifi-ssid"
 SSID=""
-if [ -r "$SSID_CACHE" ]; then
+if [ -r "$SSID_CACHE" ] && [ "$(( $(date +%s) - $(stat -f %m "$SSID_CACHE") ))" -le 60 ]; then
   SSID=$(tr -d '\r\n' < "$SSID_CACHE" | cut -c1-32)
 fi
 
 if [ -n "$(ipconfig getifaddr en0 2>/dev/null)" ]; then
   if [ -n "$SSID" ]; then
-    sketchybar --set "$NAME" icon="󰖩" icon.color=$BLUE label="$SSID" label.drawing=on
+    sketchybar --set "$NAME" icon="󰖩" icon.color="$BLUE" label="$SSID" label.drawing=on
   else
-    sketchybar --set "$NAME" icon="󰖩" icon.color=$BLUE label.drawing=off
+    sketchybar --set "$NAME" icon="󰖩" icon.color="$BLUE" label.drawing=off
   fi
   exit 0
 fi
@@ -29,7 +29,7 @@ fi
 IFACE=$(route get default 2>/dev/null | awk '/interface:/ {print $2}')
 
 if [ -n "$IFACE" ]; then
-  sketchybar --set "$NAME" icon="󰈀" icon.color=$BLUE label.drawing=off
+  sketchybar --set "$NAME" icon="󰈀" icon.color="$BLUE" label.drawing=off
 else
-  sketchybar --set "$NAME" icon="󰖪" icon.color=$RED label.drawing=off
+  sketchybar --set "$NAME" icon="󰖪" icon.color="$RED" label.drawing=off
 fi

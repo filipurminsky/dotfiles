@@ -1,0 +1,11 @@
+#!/bin/sh
+# Rebuild Mason's Groovy server without changing Neovim's Java environment.
+set -eu
+jdk="$HOME/Library/Java/JavaVirtualMachines/temurin-19.0.2/Contents/Home"
+server="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/packages/groovy-language-server"
+cd "$server"
+if [ -x "$jdk/bin/java" ]; then
+  export JAVA_HOME="$jdk"
+  export PATH="$jdk/bin:$PATH"
+fi
+exec ./gradlew --no-daemon build "$@"

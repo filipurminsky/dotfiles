@@ -201,9 +201,12 @@ dotfiles push
   On Linux there's no `security`; swap the `*-cred-cmd` lines to a local secret
   store (e.g. `pass show aerc-gmail`).
 - macOS desktop (aerospace + sketchybar + borders): none of the three uses
-  `brew services`. `aerospace.toml` sets `start-at-login` and its
-  `after-startup-command` execs borders and sketchybar, so AeroSpace brings up
-  the whole bar. AeroSpace needs **Accessibility** permission (System Settings >
+  `brew services`. AeroSpace sets `start-at-login`; its startup command runs
+  `~/.config/dotfiles/desktop-services.sh`. That idempotent installer registers
+  launchd supervisors for SketchyBar, borders, and the microphone watcher.
+  Existing processes keep running; the supervisor starts their replacement
+  when they exit. Templates live in `.config/dotfiles/launchd/`.
+  AeroSpace needs **Accessibility** permission (System Settings >
   Privacy & Security) before it can manage windows.
 - sketchybar has three build artefacts, all compiled by `bootstrap.sh` from
   tracked Swift sources: `bin/micstatus` (microphone-in-use watcher, plain
@@ -219,3 +222,15 @@ dotfiles push
   `~/Library/LaunchAgents` with `__HOME__` substituted) runs the poll wrapper,
   because a plugin spawned by sketchybar inherits sketchybar's TCC context and
   gets denied.
+- tmux restores Neovim through `.config/tmux/nvim-restore.sh`, which opts into
+  LazyVim Persistence's project/branch session. Neovim checkpoints that session
+  every minute and on focus/buffer changes while persistence is enabled;
+  `<leader>qd` still disables saving. Regular launches do not auto-restore.
+- Neovim leaves the shell's `JAVA_HOME` alone. On macOS, jdtls selects Java 21+
+  using `java_home`; Groovy alone uses the installed Temurin 19 runtime.
+  To rebuild Mason's installed Groovy server with its compatible Gradle JVM,
+  run `build-groovy-language-server`. This scopes Java 19 to that build process.
+- SketchyBar expires keyboard readings after 15 minutes and SSID readings
+  after one minute. Invalid weather responses preserve the last valid cache.
+  The microphone helper uses CoreAudio process input activity (macOS 14.2+),
+  avoiding false microphone indications from headset playback.

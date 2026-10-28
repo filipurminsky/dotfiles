@@ -414,9 +414,6 @@ function __icon_map() {
    "deno")
         icon_result=":deno:"
         ;;
-   "CleanMyMac X")
-        icon_result=":desktop:"
-        ;;
    "Devin")
         icon_result=":devin:"
         ;;

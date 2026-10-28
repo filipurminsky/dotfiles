@@ -15,6 +15,6 @@ case "$NAME" in
 esac
 
 case "$SENDER" in
-  mouse.entered) sketchybar --set "$_hover_target" background.color=$LINE;     exit 0 ;;
-  mouse.exited)  sketchybar --set "$_hover_target" background.color=$SURFACE0; exit 0 ;;
+  mouse.entered) sketchybar --set "$_hover_target" background.color="$LINE";     exit 0 ;;
+  mouse.exited)  sketchybar --set "$_hover_target" background.color="$SURFACE0"; exit 0 ;;
 esac

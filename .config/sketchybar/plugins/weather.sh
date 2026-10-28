@@ -5,8 +5,7 @@
 #
 # Order matters here: the last good reading is painted from cache *before*
 # the network fetch, so a bar reload shows weather instantly instead of a
-# blank item for the length of a curl timeout. wttr.in throttles bursts of
-# requests (every reload fetches), so the cache also covers failed fetches.
+# blank item for the length of a curl timeout. The cache covers failed fetches.
 #
 # This file must stay executable — sketchybar execs plugins directly and a
 # 644 script fails silently: no timer ticks, no events, nothing.
@@ -43,6 +42,7 @@ render() {  # $1 = "Condition|+21°C"
   cond=$(printf '%s' "${1%%|*}" | tr '[:upper:]' '[:lower:]')
   temp="${1##*|}"
   temp="${temp#+}"
+  [[ "${temp%°C}" =~ ^-?[0-9]+([.][0-9]+)?$ ]] || return 1
   temp="$(round_temp "${temp%°C}")°C"
   case "$cond" in
     *thunder*)                        icon="󰖓" ;;
@@ -54,7 +54,7 @@ render() {  # $1 = "Condition|+21°C"
     *clear*|*sunny*)                  icon="󰖙" ;;
     *)                                icon="󰖕" ;;
   esac
-  sketchybar --set "$NAME" drawing=on icon="$icon" icon.color=$YELLOW label="$temp"
+  sketchybar --set "$NAME" drawing=on icon="$icon" icon.color="$YELLOW" label="$temp"
 }
 
 condition_from_wmo_code() {
@@ -76,7 +76,7 @@ if [ -f "$CACHE" ]; then
   AGE_MIN=$(( ($(date +%s) - $(stat -f %m "$CACHE")) / 60 ))
   if [ "$AGE_MIN" -le "$MAX_AGE_MIN" ]; then
     IFS= read -r CACHED < "$CACHE"
-    case "$CACHED" in *'|'*) render "$CACHED"; PAINTED=yes ;; esac
+    case "$CACHED" in *'|'*) render "$CACHED" && PAINTED=yes ;; esac
   fi
 fi
 # Nothing to paint yet — hide rather than show an empty pill.
@@ -85,7 +85,12 @@ fi
 # 2. Fetch fresh. The coordinates make the source independent of VPN routing.
 # On failure, whatever step 1 painted stands.
 JSON=$(curl -sf --max-time 5 "https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,weather_code&timezone=Europe%2FBratislava" 2>/dev/null)
-RAW=$(printf '%s' "$JSON" | jq -r '.current | "\(.weather_code)|\(.temperature_2m)"' 2>/dev/null)
+RAW=$(printf '%s' "$JSON" | jq -er '
+  .current | select(type == "object") |
+  select((.weather_code | type) == "number" and (.temperature_2m | type) == "number") |
+  select(.weather_code >= 0 and .weather_code <= 99 and .weather_code == (.weather_code | floor)) |
+  select(.temperature_2m >= -100 and .temperature_2m <= 70) |
+  "\(.weather_code)|\(.temperature_2m)"' 2>/dev/null)
 case "$RAW" in
   *'|'*)
     CODE="${RAW%%|*}"
@@ -97,7 +102,9 @@ esac
 case "$RESP" in
   *'|'*)
     mkdir -p "${CACHE%/*}"
-    printf '%s\n' "$RESP" > "$CACHE"
+    TEMP_CACHE=$(mktemp "$CACHE.XXXXXX") || exit 1
+    trap 'rm -f "$TEMP_CACHE"' EXIT
+    printf '%s\n' "$RESP" > "$TEMP_CACHE" && mv -f "$TEMP_CACHE" "$CACHE"
     render "$RESP"
     ;;
 esac
