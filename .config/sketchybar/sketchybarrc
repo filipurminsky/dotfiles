@@ -20,7 +20,13 @@ APPFONT="sketchybar-app-font"
 # display. Do NOT add notch_display_height here — it is the bar's height on
 # the notched display, not a display selector, so a value like 1117 makes the
 # bar swallow the screen. --query bar does not report either back.
-# Flush to the screen edges; opaque BASE matches Ghostty's Catppuccin Mocha
+# padding_right is not padding_left's twin: macOS draws its privacy indicator
+# — the orange microphone dot, green for the camera — over the top-right
+# corner of the screen, above every window including this bar, and no API can
+# move or suppress it. Measured on this display it covers the rightmost ~21pt,
+# so the right side is held off by 26 to clear it with a small gap. The mic
+# item below reports the same state somewhere it can actually be read.
+# Flush to the left edge; opaque BASE matches Ghostty's Catppuccin Mocha
 # terminal background exactly. AeroSpace's outer.top=0 relies on the menu-bar reservation covering
 # the bar's height — grow it and windows slide under the bar.
 sketchybar --bar \
@@ -28,7 +34,7 @@ sketchybar --bar \
   position=top \
   sticky=on \
   padding_left=8 \
-  padding_right=8 \
+  padding_right=26 \
   color=$BASE \
   blur_radius=30 \
   shadow=off \
@@ -230,6 +236,30 @@ sketchybar --add item keyboard right \
     click_script="open 'x-apple.systempreferences:com.apple.BluetoothSettings'" \
     script="$PLUGIN_DIR/keyboard.sh"
 
+# Microphone in use. macOS's own orange dot sits above every window on the
+# top-right corner of the screen — the window server draws it and nothing can
+# move or hide it — so this is the same signal somewhere it can be read at a
+# glance. The reading needs no microphone TCC grant; see bin/micstatus.swift.
+# bin/micstatus --watch (started below) fires mic_change on every flip, so
+# update_freq is only a safety net for a watcher that died. Icon only, and
+# drawn only while something is recording.
+sketchybar --add event mic_change
+
+sketchybar --add item mic right \
+  --subscribe mic mic_change system_woke mouse.entered mouse.exited \
+  --set mic \
+    updates=on \
+    update_freq=60 \
+    padding_left=6 \
+    drawing=off \
+    icon="󰍬" \
+    icon.color=$PEACH \
+    icon.padding_left=8 \
+    icon.padding_right=8 \
+    label.drawing=off \
+    click_script="open 'x-apple.systempreferences:com.apple.Sound-Settings.extension'" \
+    script="$PLUGIN_DIR/mic.sh"
+
 sketchybar --add item volume right \
   --subscribe volume volume_change mouse.entered mouse.exited \
   --set volume \
@@ -280,4 +310,11 @@ sketchybar --add bracket network wifi vpn \
     background.height=22
 
 ##### Go #####
+# One resident CoreAudio listener behind the mic item. sketchybarrc re-runs on
+# every reload, so clear the previous one first; the watcher outlives this
+# script as an orphan, which is what keeps the item live between reloads.
+pkill -f "$CONFIG_DIR/bin/micstatus --watch" 2>/dev/null
+[ -x "$CONFIG_DIR/bin/micstatus" ] && \
+  ("$CONFIG_DIR/bin/micstatus" --watch >/dev/null 2>&1 &)
+
 sketchybar --update

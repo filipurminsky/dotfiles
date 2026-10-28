@@ -20,11 +20,30 @@ LONGITUDE="17.1077"
 CACHE="$HOME/.cache/sketchybar/weather"
 MAX_AGE_MIN=180   # stale cache beyond this is worse than no item
 
+# Whole degrees only — a tenth of a degree is noise in a status bar, and the
+# extra glyphs made the item's width jitter on every refresh. Rounds half away
+# from zero (20.4 -> 20, 22.8 -> 23, -3.5 -> -4); printf %.0f is not used
+# because it rounds halves to even, so 20.5 would land on 20 and 21.5 on 22.
+# Done here rather than at fetch time so a cached reading taken before this
+# existed still renders rounded.
+round_temp() {  # $1 = "20.4" -> "20"
+  local n="$1" sign="" int frac
+  case "$n" in -*) sign="-"; n="${n#-}" ;; esac
+  int="${n%%.*}"
+  frac="${n#*.}"
+  [ "$frac" = "$n" ] && frac=0      # no decimal point at all
+  int="${int:-0}"
+  case "${frac:0:1}" in [5-9]) int=$((int + 1)) ;; esac
+  [ "$int" = 0 ] && sign=""          # never print "-0"
+  printf '%s%s' "$sign" "$int"
+}
+
 render() {  # $1 = "Condition|+21°C"
   local cond temp icon
   cond=$(printf '%s' "${1%%|*}" | tr '[:upper:]' '[:lower:]')
   temp="${1##*|}"
   temp="${temp#+}"
+  temp="$(round_temp "${temp%°C}")°C"
   case "$cond" in
     *thunder*)                        icon="󰖓" ;;
     *snow*|*sleet*|*blizzard*|*ice*)  icon="󰖘" ;;

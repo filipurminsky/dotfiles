@@ -71,6 +71,16 @@ if manifest_has "launchagent:local.sketchybar.btbattery" && [ -f "$AGENT" ]; the
   rm -f "$AGENT"
 fi
 
+# WiFiSSIDHelper launch agent, same pattern. Its built executable is a
+# manifest file: entry, removed above.
+WIFI_AGENT="$HOME/Library/LaunchAgents/com.filipurminsky.sketchybar-wifi-ssid.plist"
+if manifest_has "launchagent:com.filipurminsky.sketchybar-wifi-ssid" && [ -f "$WIFI_AGENT" ]; then
+  info "Unloading the WiFiSSIDHelper launch agent"
+  launchctl bootout "gui/$UID/com.filipurminsky.sketchybar-wifi-ssid" 2>/dev/null \
+    || launchctl unload "$WIFI_AGENT" 2>/dev/null || true
+  rm -f "$WIFI_AGENT"
+fi
+
 # 4. Sqlit (only if bootstrap installed it) ----------------------------------
 if manifest_has "uvtool:sqlit-tui" && have uv; then
   info "Removing Sqlit"

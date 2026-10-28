@@ -244,6 +244,51 @@ if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
     fi
   fi
 
+  if [ -f "$SB/bin/micstatus.swift" ]; then
+    if have swiftc; then
+      record_new_file "$SB/bin/micstatus"
+      info "Building micstatus (microphone-in-use helper)"
+      # Plain build — this one only reads CoreAudio properties, so unlike
+      # btbattery it needs no embedded Info.plist and no TCC grant.
+      ( cd "$SB/bin" && swiftc -O micstatus.swift -o micstatus ) \
+        || warn "micstatus build failed — the microphone item never appears"
+    else
+      warn "swiftc not found (install Xcode CLT) — skipping micstatus build"
+    fi
+  fi
+
+  # WiFiSSIDHelper is a real .app bundle, not a bare binary: macOS 14+ only
+  # returns the SSID to a process holding Location Services permission, and
+  # that grant attaches to a bundle identifier. Only the executable is built;
+  # Info.plist is tracked inside the bundle. Ad-hoc signing gives TCC a stable
+  # identity to remember the grant against.
+  WIFI_APP="$SB/wifi-ssid-helper/WiFiSSIDHelper.app"
+  if [ -f "$SB/wifi-ssid-helper/Sources/main.swift" ]; then
+    if have swiftc; then
+      record_new_file "$WIFI_APP/Contents/MacOS/WiFiSSIDHelper"
+      info "Building WiFiSSIDHelper (Wi-Fi network name for the bar)"
+      mkdir -p "$WIFI_APP/Contents/MacOS"
+      swiftc -O "$SB/wifi-ssid-helper/Sources/main.swift" \
+          -o "$WIFI_APP/Contents/MacOS/WiFiSSIDHelper" \
+        && codesign --force --sign - "$WIFI_APP" \
+        || warn "WiFiSSIDHelper build failed — the wifi item shows no network name"
+    else
+      warn "swiftc not found (install Xcode CLT) — skipping WiFiSSIDHelper build"
+    fi
+  fi
+
+  WIFI_AGENT_TEMPLATE="$SB/launchd/com.filipurminsky.sketchybar-wifi-ssid.plist"
+  WIFI_AGENT="$HOME/Library/LaunchAgents/com.filipurminsky.sketchybar-wifi-ssid.plist"
+  if [ -f "$WIFI_AGENT_TEMPLATE" ] && [ -x "$WIFI_APP/Contents/MacOS/WiFiSSIDHelper" ]; then
+    info "Installing the WiFiSSIDHelper launch agent (approve the Location prompt)"
+    mkdir -p "$HOME/Library/LaunchAgents"
+    sed "s|__HOME__|$HOME|g" "$WIFI_AGENT_TEMPLATE" > "$WIFI_AGENT"
+    record "launchagent:com.filipurminsky.sketchybar-wifi-ssid"
+    launchctl bootout "gui/$UID/com.filipurminsky.sketchybar-wifi-ssid" 2>/dev/null || true
+    launchctl bootstrap "gui/$UID" "$WIFI_AGENT" 2>/dev/null \
+      || launchctl load "$WIFI_AGENT" 2>/dev/null || true
+  fi
+
   AGENT_TEMPLATE="$SB/launchd/local.sketchybar.btbattery.plist"
   AGENT="$HOME/Library/LaunchAgents/local.sketchybar.btbattery.plist"
   if [ -f "$AGENT_TEMPLATE" ] && [ -x "$SB/bin/btbattery" ]; then
