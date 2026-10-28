@@ -57,6 +57,9 @@
 .claude/telemetry/
 
 # ── Machine state / vendored payloads, not configuration ─────────────
+# Codex credentials, sessions, and local project trust. Portable preferences
+# live in .config/dotfiles/codex-config.toml instead.
+.codex/
 # The bare repo lives inside its own work tree; never track its metadata.
 .dotfiles/
 .config/karabiner/automatic_backups/

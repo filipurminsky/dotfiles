@@ -17,6 +17,7 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
   accounts), `gh` (`config.yml` only), `glow`, `lazydocker`, `sqlit` (settings
   and keymap, not connections)
 - Claude Code: `.claude/settings.json`, `keybindings.json`, `statusline-command.sh`
+- Codex: `.config/dotfiles/codex-config.toml` (portable preferences)
 - Hand-written scripts in `.local/bin/`
 - `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks/fonts)
 - `.config/dotfiles/` (this README + `bootstrap.sh`)
@@ -184,6 +185,11 @@ dotfiles push
 ```
 
 ## Notes
+- Codex: merge `.config/dotfiles/codex-config.toml` into `~/.codex/config.toml`
+  to enable Vim mode by default. If `[tui]` already exists, add
+  `vim_mode_default = true` to that section. Use `/vim` to toggle it in the
+  current session. Keep `~/.codex/` local: it contains credentials, sessions,
+  and project trust settings.
 - `~/.gitconfig.local` holds your git identity and is **never** tracked (keeps
   email out of this public repo). `bootstrap.sh` creates it on a new machine.
 - tmux plugins: after first launch, press `prefix + I` if `bootstrap.sh`'s TPM

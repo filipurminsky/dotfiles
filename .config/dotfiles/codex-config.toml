@@ -1,0 +1,3 @@
+# Merge into ~/.codex/config.toml; keep local project trust settings there.
+[tui]
+vim_mode_default = true
