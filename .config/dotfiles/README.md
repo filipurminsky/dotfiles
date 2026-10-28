@@ -13,6 +13,11 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - `.config/btop/` (`btop.conf` + a hand-built `catppuccin_mocha.theme`, since
   the Homebrew formula ships no Catppuccin variant)
 - `.config/lazygit/config.yml`
+- Other tool configs: `ghostty`, `karabiner`, `zathura`, `aerc` (minus
+  accounts), `gh` (`config.yml` only), `glow`, `lazydocker`, `sqlit` (settings
+  and keymap, not connections)
+- Claude Code: `.claude/settings.json`, `keybindings.json`, `statusline-command.sh`
+- Hand-written scripts in `.local/bin/`
 - `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks/fonts)
 - `.config/dotfiles/` (this README + `bootstrap.sh`)
 - macOS desktop: `.config/aerospace/` (tiling WM), `.config/sketchybar/` (bar +
@@ -22,6 +27,10 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - `~/.ssh/` — excluded wholesale in `~/.gitignore`. This repo is public and
   `status.showUntrackedFiles no` hides mistakes, so a stray `dotfiles add -A`
   from `$HOME` is the one accident that must never reach a remote.
+- Credentials and machine state: gh/Copilot/Snyk tokens, fabric `.env`,
+  sqlit connections and saved queries, FileZilla, Claude Code session data.
+  See `~/.gitignore` for the full list — and **Migrate to a new computer**
+  below for how the ones you need get moved by hand.
 - `.config/tmuxp/` — session templates whose `start_directory` paths name
   employer repos. In `.dotfiles/info/exclude` (repo-local) rather than
   `~/.gitignore`, because here the pattern itself is what leaks.
@@ -30,6 +39,80 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - Neovim → [`nvim-config`](https://github.com/filipurminsky/nvim-config) → `~/.config/nvim`
 - Yazi   → [`yazi-config`](https://github.com/filipurminsky/yazi-config) (public) → `~/.config/yazi`
 - zsh plugins / TPM / yazi packages → installed, not vendored
+
+## Migrate to a new computer
+The repos carry everything shareable. Secrets, work-specific files and shell
+history travel separately, in an encrypted disk image you make on the old
+machine.
+
+### 1. On the old machine
+Make sure nothing is left only locally:
+```sh
+dotfiles status                       # commit + push anything listed
+git -C ~/.config/nvim status
+git -C ~/.config/yazi status
+dotfiles push; git -C ~/.config/nvim push; git -C ~/.config/yazi push
+```
+
+Flush shell history to atuin and save its encryption key — history is
+encrypted client-side, so without the key the synced copy is unreadable:
+```sh
+atuin sync
+atuin key        # store the printed words in your password manager
+```
+
+Pack the private files into an AES-256 encrypted image (prompts for a
+password). Paths that don't exist are skipped:
+```sh
+cd ~
+paths=(
+  .ssh .gnupg .aws .kube          # keys, cloud and cluster credentials
+  .gitconfig.local                # git identity
+  .zsh_history                    # zsh-autosuggestions reads this, not atuin
+  .local/share/atuin/key          # atuin encryption key (also in password manager)
+  .config/aerc                    # incl. untracked account and credential files
+  .config/tmuxp                   # session templates (private paths)
+  .config/sqlit/connections.json .config/sqlit/queries
+  .config/fabric/.env             # API keys
+  .config/configstore             # Snyk token
+  .claude/automode.private.json   # work-specific auto-mode rules
+)
+stage=$(mktemp -d)
+for p in "${paths[@]}"; do [ -e "$p" ] && rsync -aR "$p" "$stage/"; done
+hdiutil create -encryption AES-256 -srcfolder "$stage" -volname migrate ~/Desktop/migrate.dmg
+rm -rf "$stage"
+```
+Move `migrate.dmg` over by AirDrop or a USB stick — not a cloud folder.
+
+### 2. On the new machine
+1. Install the dotfiles and run `bootstrap.sh` — see **Set up a new machine**
+   below.
+2. Restore the private files, then tighten permissions:
+   ```sh
+   open ~/Downloads/migrate.dmg          # asks for the image password
+   rsync -a /Volumes/migrate/ ~/
+   chmod 700 ~/.ssh ~/.gnupg; chmod 600 ~/.ssh/id_*
+   gpgconf --kill gpg-agent              # pick up the copied keyring
+   hdiutil detach /Volumes/migrate && rm ~/Downloads/migrate.dmg
+   ```
+3. Merge `~/.claude/automode.private.json` back into `~/.claude/settings.json`
+   (it is the `autoMode` key, kept out of this public repo).
+4. Shell history:
+   ```sh
+   atuin login -u filipurminsky          # password + key from step 1
+   atuin sync
+   ```
+5. Sign in again where a token was deliberately left behind: `gh auth login`,
+   GitHub Copilot (`:Copilot auth` in Neovim), `codex login`, Claude Code.
+6. Re-add the aerc Gmail app password to the keychain (see **Notes** below).
+7. Grant permissions when macOS asks: **Accessibility** for AeroSpace and
+   Karabiner-Elements (plus its driver extension), **Location** for
+   WiFiSSIDHelper (Wi-Fi name in the bar), **Bluetooth** for btbattery.
+8. Open tmux and press `prefix + I` if the plugins didn't install.
+
+Not covered by any of this: app data with its own sync (browsers, Obsidian
+vaults in iCloud, Teams/Outlook), Docker images, and SDKMAN JDKs — reinstall
+or re-sign-in as needed.
 
 ## Set up a new machine
 `bootstrap.sh` auto-detects macOS vs Linux — you only need `git` + the bare repo first.
@@ -105,7 +188,9 @@ dotfiles push
   email out of this public repo). `bootstrap.sh` creates it on a new machine.
 - tmux plugins: after first launch, press `prefix + I` if `bootstrap.sh`'s TPM
   install didn't run.
-- atuin history: `atuin import auto`, then `atuin login` for cross-machine sync.
+- atuin history: synced, end-to-end encrypted. On a new machine run
+  `atuin login` + `atuin sync` rather than `atuin import auto` — the key comes
+  from `atuin key` on the old one (see **Migrate to a new computer**).
 - aerc (email): `aerc.conf` + `binds.conf` are tracked; `~/.config/aerc/accounts.conf`
   is **never** tracked (account details out of this public repo). On a new machine,
   recreate it and store the Gmail app password in the keychain — aerc reads it via
@@ -120,7 +205,12 @@ dotfiles push
   `after-startup-command` execs borders and sketchybar, so AeroSpace brings up
   the whole bar. AeroSpace needs **Accessibility** permission (System Settings >
   Privacy & Security) before it can manage windows.
-- `sketchybar/bin/btbattery` is the one build artefact: the Swift source is
+- sketchybar has three build artefacts, all compiled by `bootstrap.sh` from
+  tracked Swift sources: `bin/micstatus` (microphone-in-use watcher, plain
+  build), `wifi-ssid-helper/WiFiSSIDHelper.app` (an app bundle, because the
+  Location permission macOS requires for reading the SSID attaches to a bundle
+  ID; ad-hoc signed, started by a `__HOME__`-templated launch agent), and
+  `bin/btbattery`: the Swift source is
   tracked, the compiled binary is gitignored, and `bootstrap.sh` builds it with
   `swiftc -sectcreate` to embed `btbattery-Info.plist`. That embedding is
   required — TCC reads the Bluetooth usage description from the binary's own

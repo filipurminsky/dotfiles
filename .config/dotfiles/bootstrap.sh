@@ -311,7 +311,10 @@ if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
   fi
 fi
 
-info "Done. Open a new shell. Optional: 'atuin import auto' (history), 'atuin login' (sync)."
+# History comes back through atuin sync; 'atuin import auto' would only re-read
+# a fresh ~/.zsh_history on top of it. Login needs the encryption key from the
+# old machine ('atuin key' there), not just the password.
+info "Done. Open a new shell, then restore history: 'atuin login -u filipurminsky' (needs the key from 'atuin key' on the old machine), 'atuin sync'."
 if [ "$OS" = "Darwin" ]; then
   info "macOS: grant AeroSpace Accessibility access when prompted (System Settings"
   info "  > Privacy & Security > Accessibility) — it cannot manage windows without it."
