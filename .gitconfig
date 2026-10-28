@@ -16,7 +16,7 @@
 	syntax-theme = Catppuccin Mocha
 [merge]
 	conflictStyle = zdiff3
-	tool = nvimdiff
+	tool = diffbandit
 [init]
 	defaultBranch = main
 [pull]
@@ -34,7 +34,7 @@
 	enabled = true
 [diff]
 	algorithm = histogram
-	tool = nvimdiff
+	tool = diffbandit
 	colorMoved = default
 [commit]
 	verbose = true
@@ -45,7 +45,17 @@
 [mergetool]
 	prompt = false
 	keepBackup = false
+; diffbandit.nvim reads the conflict stages from the index and `git add`s the
+; file on :w. trustExitCode stays off because nvim exits 0 even when you close
+; without resolving, so git asks whether the merge succeeded.
+[mergetool "diffbandit"]
+	cmd = nvim-diffbandit merge "$MERGED"
+	trustExitCode = false
 [difftool]
 	prompt = false
+; git passes directories here when called with --dir-diff (lazygit's <c-t> does
+; that for folder nodes); the wrapper picks the folder view in that case.
+[difftool "diffbandit"]
+	cmd = nvim-diffbandit diff "$LOCAL" "$REMOTE"
 [alias]
-	conflicts = !nvim -c DiffviewOpen
+	conflicts = !nvim -c DiffBanditGit

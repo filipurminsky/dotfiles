@@ -1,0 +1,29 @@
+#!/bin/sh
+# Launch diffbandit.nvim as git's difftool / mergetool:
+#   nvim-diffbandit diff  "$LOCAL" "$REMOTE"   # dirs when git uses --dir-diff
+#   nvim-diffbandit merge "$MERGED"
+#
+# Paths travel through the environment rather than being interpolated into the
+# -c argument, so spaces and shell metacharacters survive. Each -c stays a
+# single line because :lua takes one line only.
+set -eu
+
+quit_on_close='vim.api.nvim_create_autocmd("TabClosed", { once = true, callback = function() vim.cmd("confirm qall") end })'
+
+case "${1:-}" in
+  diff)
+    DB_LEFT=$2
+    DB_RIGHT=$3
+    export DB_LEFT DB_RIGHT
+    exec nvim -c "lua local l, r = vim.env.DB_LEFT, vim.env.DB_RIGHT; local c = vim.fn.isdirectory(l) == 1 and 'DiffBanditFolderDiff' or 'DiffBandit'; vim.cmd(c .. ' ' .. vim.fn.fnameescape(l) .. ' ' .. vim.fn.fnameescape(r)); $quit_on_close"
+    ;;
+  merge)
+    DB_MERGED=$2
+    export DB_MERGED
+    exec nvim -c "lua vim.cmd('DiffBanditMerge ' .. vim.fn.fnameescape(vim.env.DB_MERGED)); $quit_on_close"
+    ;;
+  *)
+    echo "usage: nvim-diffbandit diff LEFT RIGHT | merge FILE" >&2
+    exit 2
+    ;;
+esac
