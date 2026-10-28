@@ -75,6 +75,8 @@ brew "kustomize"
 brew "lazydocker"
 # Simple terminal UI for git commands
 brew "lazygit"
+# PostgreSQL client tools, including psql (no database server)
+brew "libpq"
 # Unified display of technical and tag data for audio/video
 brew "media-info"
 # Open source relational database management system

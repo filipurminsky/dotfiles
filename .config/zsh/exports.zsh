@@ -22,6 +22,11 @@ export MANPAGER='nvim +Man!'
 
 export PATH="$HOME/.local/bin:$PATH"
 
+# Homebrew keeps PostgreSQL client tools keg-only; expose psql in the shell.
+if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/libpq/bin" ]]; then
+  export PATH="$HOMEBREW_PREFIX/opt/libpq/bin:$PATH"
+fi
+
 # --- fzf -------------------------------------------------------------------
 # Use fd (respects .gitignore, includes hidden files except .git) as the
 # source for the default picker, Ctrl-T (files) and Alt-C (dirs). The key
