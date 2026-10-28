@@ -10,3 +10,7 @@ for _b in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.linuxbrew"
   fi
 done
 unset _b
+
+
+# ~/.local/bin (hand-written scripts, Antigravity CLI)
+export PATH="$HOME/.local/bin:$PATH"

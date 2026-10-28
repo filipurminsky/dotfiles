@@ -1,0 +1,22 @@
+{
+  "theme": "rose-pine",
+  "expanded_nodes": [
+    "conn:ci_uat",
+    "conn:cip qa",
+    "conn:cip qa/folder:tables",
+    "conn:cip qa/folder:tables/table:.tenant_call_channels_default",
+    "conn:cip qa/folder:tables/table:.tenant_complaint_schema",
+    "conn:cip qa/folder:tables/table:.user",
+    "conn:cip_prod",
+    "conn:cip_prod/folder:tables",
+    "conn:komunita",
+    "conn:komunita/folder:tables",
+    "conn:komunita/folder:tables/schema:app",
+    "conn:komunita/folder:tables/schema:app/table:app.config",
+    "conn:komunita/folder:tables/schema:app/table:app.usage_counts",
+    "conn:komunita/folder:tables/schema:drizzle",
+    "conn:komunita/folder:tables/schema:geo",
+    "conn:komunita/folder:tables/schema:ingest",
+    "conn:komunita/folder:tables/schema:ingest/table:ingest.document_texts"
+  ]
+}

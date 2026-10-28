@@ -81,6 +81,10 @@ brew "mysql@8.4", link: true
 brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# Lua package manager — avante.nvim's build step installs its rocks with it
+brew "luarocks"
+# Tesseract OCR language data (tesseract itself comes in as a dependency)
+brew "tesseract-lang"
 # OpenBSD freely-licensed SSH connectivity tools
 brew "openssh"
 # Swiss-army knife of markup format conversion
