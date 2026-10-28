@@ -308,7 +308,23 @@ run = 'move-node-to-workspace 5'
 if.app-id = 'com.microsoft.Word'
 run = 'move-node-to-workspace 5'
 
-# No workspace-to-monitor-force-assignment: single-display setup, so every
-# workspace lands on the built-in panel by default. Adding the block back
-# only makes sense if an external display is ever used — and note that a
-# pattern which matches nothing falls back to the main monitor silently.
+# ──────────────────────────────────────────────────────────────
+# External display takes everything. Every workspace is pinned to the
+# first monitor whose name does NOT start with "Built-in"; when no such
+# monitor is connected, AeroSpace falls back to the main monitor, i.e. the
+# built-in panel. Matching on the name (not 'secondary') keeps this right
+# regardless of which display macOS treats as main.
+#
+# AeroSpace still needs one visible workspace per monitor, so the built-in
+# panel gets an auto-created empty one while docked.
+# ──────────────────────────────────────────────────────────────
+[workspace-to-monitor-force-assignment]
+1 = '^(?!built-in)'
+2 = '^(?!built-in)'
+3 = '^(?!built-in)'
+4 = '^(?!built-in)'
+5 = '^(?!built-in)'
+6 = '^(?!built-in)'
+7 = '^(?!built-in)'
+8 = '^(?!built-in)'
+9 = '^(?!built-in)'
