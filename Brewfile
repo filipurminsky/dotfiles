@@ -25,6 +25,8 @@ brew "conftest"
 brew "crane"
 # Tool for exploring each layer in a docker image
 brew "dive"
+# Load and unload project environment variables when changing directories
+brew "direnv"
 # Modern, maintained replacement for ls
 brew "eza"
 # Open-source framework for augmenting humans using AI
@@ -91,6 +93,8 @@ brew "openssh"
 brew "pandoc"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
+# Keyboard-driven HTTP API client for the terminal
+brew "posting"
 # SVG rendering tool and library
 brew "resvg"
 # Search tool like grep and The Silver Searcher

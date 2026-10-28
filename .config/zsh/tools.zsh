@@ -23,3 +23,6 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 # zoxide (provides the `z` command; smarter cd with frecency)
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+# direnv — load each project's approved .envrc and unload it on leaving.
+command -v direnv >/dev/null && eval "$(direnv hook zsh)"
