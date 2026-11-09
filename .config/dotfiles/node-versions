@@ -3,4 +3,5 @@
 # Blank lines and # comments are ignored. Upgrade by editing this file and
 # re-running bootstrap.sh (or `fnm install <ver>` by hand).
 20.20.2
-24.15.0 default
+24.22.2
+26.13.0 default

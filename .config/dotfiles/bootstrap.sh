@@ -167,7 +167,7 @@ NODE_VERSIONS="$HOME/.config/dotfiles/node-versions"
 if [ "$MODE" = full ] && have fnm && [ -f "$NODE_VERSIONS" ]; then
   record_new_path "$HOME/.local/share/fnm"
   info "Installing Node versions via fnm (from node-versions)"
-  eval "$(fnm env)"
+  eval "$(fnm env --shell bash)"
   while read -r ver tag _; do
     case "$ver" in ''|\#*) continue ;; esac
     fnm install "$ver" || warn "fnm install $ver failed"
