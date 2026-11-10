@@ -34,7 +34,7 @@ DEFAULT_USER=$(whoami)
 # zsh-vi-mode is skipped inside Neovim's terminal ($NVIM is set there): nvim
 # already provides modal editing for the terminal buffer, and two vi layers
 # fight over Esc. In a real terminal / tmux it loads normally.
-plugins=(zsh-syntax-highlighting zsh-autosuggestions git aws kubectl docker terraform)
+plugins=(fzf-tab zsh-syntax-highlighting zsh-autosuggestions git aws kubectl docker terraform)
 [[ -z $NVIM ]] && plugins+=(zsh-vi-mode)
 
 # zsh-vi-mode treats a lone Esc as "exit insert mode" once ZVM_ESCAPE_KEYTIMEOUT
@@ -114,6 +114,12 @@ _init_keytools() {
   # fzf completion + key bindings (Ctrl-T files, Alt-C cd, Ctrl-R history).
   # Sourced first so atuin can override Ctrl-R below.
   source <(fzf --zsh)
+  # zsh-vi-mode and fzf's ** completion can both replace Tab. Restore
+  # fzf-tab after their initialization; keep fzf's Ctrl-T and Alt-C bindings.
+  if (( $+widgets[fzf-tab-complete] )); then
+    bindkey -M emacs '^I' fzf-tab-complete
+    bindkey -M viins '^I' fzf-tab-complete
+  fi
   # atuin: SQLite-backed history search. Owns Ctrl-R (overrides fzf's).
   # --disable-up-arrow keeps Up as plain previous-command (predictable in vi).
   eval "$(atuin init zsh --disable-up-arrow)"

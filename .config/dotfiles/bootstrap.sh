@@ -118,6 +118,7 @@ clone_plugin() {  # <repo-url> <dir>
 clone_plugin https://github.com/zsh-users/zsh-autosuggestions      zsh-autosuggestions
 clone_plugin https://github.com/zsh-users/zsh-syntax-highlighting  zsh-syntax-highlighting
 clone_plugin https://github.com/jeffreytse/zsh-vi-mode             zsh-vi-mode
+clone_plugin https://github.com/Aloxaf/fzf-tab                     fzf-tab
 
 # 5. Repo clone helper: prefer anonymous HTTPS (works for public repos with no
 #    auth prompt, so unattended runs don't block). Fall back to gh only if the

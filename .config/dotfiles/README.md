@@ -41,6 +41,16 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - Yazi   → [`yazi-config`](https://github.com/filipurminsky/yazi-config) (public) → `~/.config/yazi`
 - zsh plugins / TPM / yazi packages → installed, not vendored
 
+## Shell and workspace shortcuts
+- Tab uses fzf-tab completion; Ctrl-g selects multiple matches. Ctrl-R remains
+  Atuin history, Ctrl-T finds files, and Alt-C finds directories.
+- `lnav path/to/logs` opens the terminal log viewer.
+- `tp` picks a local tmuxp workspace; `tp NAME` opens one directly. Existing
+  sessions are attached/switched to. Templates stay private in
+  `~/.config/tmuxp/`; their session-level `start_directory` sets the project
+  parent (normally `~/git`) and window paths are relative to it. Named layouts
+  and percentage pane sizes adapt to the terminal dimensions.
+
 ## Migrate to a new computer
 The repos carry everything shareable. Secrets, work-specific files and shell
 history travel separately, in an encrypted disk image you make on the old

@@ -43,3 +43,22 @@ _nv_completion() {
   _describe 'git subdirectory' subdirs
 }
 compdef _nv_completion nv
+
+# Pick a private tmuxp workspace, or open one directly with `tp cip`.
+# tmuxp attaches/switches to existing sessions and creates missing ones.
+tp() {
+  local config_dir="${TMUXP_CONFIGDIR:-${XDG_CONFIG_HOME:-$HOME/.config}/tmuxp}"
+  local workspace
+  if (( $# )); then
+    tmuxp load --yes "$@"
+    return
+  fi
+  local -a configs
+  configs=("$config_dir"/*.(yaml|yml|json)(N))
+  if (( ! $#configs )); then
+    print -u2 "No tmuxp workspaces in $config_dir"
+    return 1
+  fi
+  workspace=$(printf '%s\n' "${configs[@]:t}" | fzf --prompt='Workspace> ') || return
+  tmuxp load --yes "$config_dir/$workspace"
+}

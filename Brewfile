@@ -75,6 +75,8 @@ brew "kustomize"
 brew "lazydocker"
 # Simple terminal UI for git commands
 brew "lazygit"
+# Interactive log viewer with filtering and SQL queries
+brew "lnav"
 # PostgreSQL client tools, including psql (no database server)
 brew "libpq"
 # Unified display of technical and tag data for audio/video
