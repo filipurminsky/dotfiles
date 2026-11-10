@@ -1,0 +1,9 @@
+# Global npm packages. Bundled by bootstrap.sh AFTER fnm has installed the
+# default Node (see node-versions), so npm exists when brew bundle runs.
+# Kept out of ~/Brewfile because a fresh machine has no npm during that pass.
+
+npm "corepack"
+# ACP adapter that lets editors (e.g. Neovim) drive Codex
+npm "@agentclientprotocol/codex-acp"
+# Snyk CLI: dependency and IaC security scanning
+npm "snyk"

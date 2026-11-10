@@ -13,14 +13,19 @@ in place — no symlinks. Works identically on macOS and Ubuntu (via Linuxbrew).
 - `.config/btop/` (`btop.conf` + a hand-built `catppuccin_mocha.theme`, since
   the Homebrew formula ships no Catppuccin variant)
 - `.config/lazygit/config.yml`
+- `.config/zellij/config.kdl`
 - Other tool configs: `ghostty`, `karabiner`, `zathura`, `aerc` (minus
   accounts), `gh` (`config.yml` only), `glow`, `lazydocker`, `sqlit` (settings
   and keymap, not connections)
 - Claude Code: `.claude/settings.json`, `keybindings.json`, `statusline-command.sh`
 - Codex: `.config/dotfiles/codex-config.toml` (portable preferences)
 - Hand-written scripts in `.local/bin/`
-- `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks/fonts)
-- `.config/dotfiles/` (this README + `bootstrap.sh`)
+- `Brewfile` (cross-platform formulae) + `Brewfile.macos` (macOS-only casks,
+  fonts, JDKs and Mac App Store apps via `mas`) + `Brewfile.npm` (global npm
+  packages, installed after fnm provides Node)
+- `.config/dotfiles/` (this README, `bootstrap.sh`, `teardown.sh`,
+  `node-versions`, `macos-defaults.sh` — the System Settings values this setup
+  relies on: dark mode, hidden menu bar, Dock, Spaces order, input sources…)
 - macOS desktop: `.config/aerospace/` (tiling WM), `.config/sketchybar/` (bar +
   plugins), `.config/borders/` — see the note below on the one build artefact
 
@@ -84,6 +89,7 @@ paths=(
   .config/aerc                    # incl. untracked account and credential files
   .config/tmuxp                   # session templates (private paths)
   .config/sqlit/connections.json .config/sqlit/queries
+  .config/helm/repositories.yaml  # chart repos incl. their credentials
   .config/fabric/.env             # API keys
   .config/configstore             # Snyk token
   .claude/automode.private.json   # work-specific auto-mode rules
@@ -96,8 +102,10 @@ rm -rf "$stage"
 Move `migrate.dmg` over by AirDrop or a USB stick — not a cloud folder.
 
 ### 2. On the new machine
-1. Install the dotfiles and run `bootstrap.sh` — see **Set up a new machine**
-   below.
+1. Sign in to the App Store (the `mas` apps in `Brewfile.macos` need it), then
+   install the dotfiles and run `bootstrap.sh` — see **Set up a new machine**
+   below. It asks for your password a few times (casks such as Docker Desktop
+   and the JDKs install system-wide).
 2. Restore the private files, then tighten permissions:
    ```sh
    open ~/Downloads/migrate.dmg          # asks for the image password
@@ -114,16 +122,23 @@ Move `migrate.dmg` over by AirDrop or a USB stick — not a cloud folder.
    atuin sync
    ```
 5. Sign in again where a token was deliberately left behind: `gh auth login`,
-   GitHub Copilot (`:Copilot auth` in Neovim), `codex login`, Claude Code.
+   GitHub Copilot (`:Copilot auth` in Neovim), `codex login`, `gemini`, Claude
+   Code (installed by bootstrap, with its plugins — just run `claude`), Docker
+   Desktop, and the browsers' own sync.
 6. Re-add the aerc Gmail app password to the keychain (see **Notes** below).
 7. Grant permissions when macOS asks: **Accessibility** for AeroSpace and
    Karabiner-Elements (plus its driver extension), **Location** for
    WiFiSSIDHelper (Wi-Fi name in the bar), **Bluetooth** for btbattery.
-8. Open tmux and press `prefix + I` if the plugins didn't install.
+8. Log out and back in once, so the menu-bar and input-source defaults apply.
+9. Open tmux and press `prefix + I` if the plugins didn't install. Neovim's
+   plugins are pre-installed; Mason tools and treesitter parsers finish on the
+   first launch.
 
 Not covered by any of this: app data with its own sync (browsers, Obsidian
-vaults in iCloud, Teams/Outlook), Docker images, and SDKMAN JDKs — reinstall
-or re-sign-in as needed.
+vaults in iCloud, Teams/Outlook), work-managed apps (Company Portal, VPN,
+Office — your employer's MDM installs those), Docker images, IntelliJ settings
+(use its Settings Sync), and SDKMAN candidates — reinstall or re-sign-in as
+needed.
 
 ## Set up a new machine
 `bootstrap.sh` auto-detects macOS vs Linux — you only need `git` + the bare repo first.
@@ -153,10 +168,14 @@ dotfiles config status.showUntrackedFiles no
 
 # Run the installer. It auto-detects the OS:
 #   Linux  -> apt prereqs -> Linuxbrew -> brew bundle (Brewfile)
-#   macOS  -> Homebrew -> brew bundle (Brewfile + Brewfile.macos casks/fonts)
-# then OMZ, zsh plugins, nvim/yazi, TPM, fnm, Sqlit (with MySQL support),
-# optional zsh login shell, git identity, and on macOS the desktop stack
-# (btbattery build + launchd timer, first AeroSpace launch).
+#   macOS  -> Homebrew -> brew bundle (Brewfile + Brewfile.macos casks/fonts/
+#             JDKs/App Store apps)
+# then OMZ, zsh plugins, nvim/yazi configs + plugins, TPM, fnm + Node,
+# global npm packages (Brewfile.npm), Sqlit (with MySQL support), Claude Code
+# + plugins, optional zsh login shell, git identity, and on macOS the desktop
+# stack (sketchybar helpers + launchd agents, macOS defaults, first AeroSpace
+# launch). A failed package is reported as a !! warning, not fatal; re-run
+# once it is fixed — every step is idempotent.
 ~/.config/dotfiles/bootstrap.sh
 ```
 
@@ -193,6 +212,17 @@ dotfiles add ~/.config/tmux/tmux.conf
 dotfiles commit -m "tweak tmux"
 dotfiles push
 ```
+
+### Keep the restore complete
+Anything installed by hand is invisible to a new machine. Every so often, list
+what is installed but not declared (nothing is removed — it's a dry run):
+```sh
+cat ~/Brewfile ~/Brewfile.macos ~/Brewfile.npm > /tmp/all.Brewfile
+brew bundle cleanup --file=/tmp/all.Brewfile   # formulae/casks/npm not listed
+dotfiles status --untracked-files=all ~/.config | head   # untracked configs
+```
+Add what you want to keep to the matching Brewfile, or `dotfiles add` its
+config. New System Settings tweaks go in `macos-defaults.sh`.
 
 ## Notes
 - Codex: merge `.config/dotfiles/codex-config.toml` into `~/.codex/config.toml`

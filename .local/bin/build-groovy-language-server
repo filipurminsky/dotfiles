@@ -1,10 +1,11 @@
 #!/bin/sh
 # Rebuild Mason's Groovy server without changing Neovim's Java environment.
 set -eu
-jdk="$HOME/Library/Java/JavaVirtualMachines/temurin-19.0.2/Contents/Home"
+# Any JDK 19 (brew cask temurin@19 or an IntelliJ download); -F fails if none.
+jdk="$(/usr/libexec/java_home -F -v 19 2>/dev/null || true)"
 server="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/packages/groovy-language-server"
 cd "$server"
-if [ -x "$jdk/bin/java" ]; then
+if [ -n "$jdk" ] && [ -x "$jdk/bin/java" ]; then
   export JAVA_HOME="$jdk"
   export PATH="$jdk/bin:$PATH"
 fi

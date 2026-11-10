@@ -6,6 +6,8 @@ tap "felixkratz/formulae"
 tap "nasedkinpv/tap"
 tap "nikitabobko/tap"
 
+# Mac App Store command-line interface (installs the mas entries below)
+brew "mas"
 # Paste PNG into files
 brew "pngpaste"
 # Send macOS User Notifications from the command-line
@@ -17,8 +19,16 @@ brew "felixkratz/formulae/sketchybar"
 # Text calculator for natural language expressions with a vim-style TUI
 brew "nasedkinpv/tap/numr"
 
+# i3-like tiling window manager for macOS
+cask "nikitabobko/tap/aerospace"
+# Privacy-focused web browser
+cask "brave-browser"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
+# Docker Desktop: container engine, CLI and GUI
+cask "docker-desktop"
+# Web browser
+cask "firefox"
 cask "font-jetbrains-mono-nerd-font"
 cask "font-sketchybar-app-font"
 cask "font-symbols-only-nerd-font"
@@ -26,9 +36,35 @@ cask "font-symbols-only-nerd-font"
 cask "gemini"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Web browser
+cask "google-chrome"
+# JetBrains Java/Kotlin IDE (Ultimate)
+cask "intellij-idea"
+# Terminal emulator (fallback to Ghostty)
+cask "iterm2"
 # Keyboard customiser
 cask "karabiner-elements"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
-# i3-like tiling window manager for macOS
-cask "nikitabobko/tap/aerospace"
+# Neovim GUI client
+cask "neovide-app"
+# Markdown knowledge base (vaults sync via iCloud)
+cask "obsidian"
+# Eclipse Temurin JDK, latest (jdtls needs Java 21+)
+cask "temurin"
+# Eclipse Temurin JDK 19 (groovy-language-server build + runtime)
+cask "temurin@19"
+# Eclipse Temurin JDK 21 LTS
+cask "temurin@21"
+# Lightweight GUI text editor
+cask "textmate"
+# Code editor
+cask "visual-studio-code"
+# Media player
+cask "vlc"
+
+# Mac App Store apps. Sign in to the App Store first; mas cannot sign in.
+mas "Evernote", id: 406056744
+mas "Spark Desktop", id: 6445813049
+mas "TestFlight", id: 899247664
+mas "Xcode", id: 497799835

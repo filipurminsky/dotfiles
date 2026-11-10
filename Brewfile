@@ -138,6 +138,8 @@ brew "w3m"
 brew "yazi"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
+# Terminal workspace (multiplexer) with batteries included
+brew "zellij"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # The modern, text-based browser
@@ -154,4 +156,3 @@ brew "homebrew-zathura/zathura/zathura-djvu"
 brew "homebrew-zathura/zathura/zathura-pdf-mupdf"
 # Postscript backend plugin for zathura
 brew "homebrew-zathura/zathura/zathura-ps"
-npm "corepack"

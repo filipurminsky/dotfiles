@@ -5,8 +5,9 @@
 # (see README.md for the checkout steps). Idempotent: safe to re-run.
 #
 # Usage: bootstrap.sh [--mode=light|full]   (default: full)
-#   full   the complete workstation: full Brewfile (+ macOS casks/fonts),
-#          Node via fnm, optional SDKMAN, etc.
+#   full   the complete workstation: full Brewfile (+ macOS casks/fonts/App
+#          Store apps), Node via fnm + global npm packages, Claude Code and
+#          its plugins, macOS system defaults, optional SDKMAN, etc.
 #   light  editing/navigation core only: zsh+plugins, tmux+plugins,
 #          neovim+plugins, yazi, ripgrep, fzf, zoxide, fd. No Node/SDKMAN/GUI.
 set -euo pipefail
@@ -81,11 +82,17 @@ done
 if [ "$MODE" = full ]; then
   if [ -f "$HOME/Brewfile" ]; then
     info "Installing cross-platform packages from ~/Brewfile"
-    brew bundle --file="$HOME/Brewfile"
+    # One failed formula must not abort the rest of the bootstrap: report it
+    # and carry on (re-run bootstrap.sh, or the bundle, once it's fixed).
+    brew bundle --file="$HOME/Brewfile" \
+      || warn "brew bundle (Brewfile) had failures — re-run: brew bundle --file=~/Brewfile"
   fi
   if [ "$OS" = "Darwin" ] && [ -f "$HOME/Brewfile.macos" ]; then
     info "Installing macOS-only packages from ~/Brewfile.macos"
-    brew bundle --file="$HOME/Brewfile.macos"
+    # mas entries need an App Store sign-in (mas can't sign in for you), and
+    # casks fail on apps already in /Applications that brew didn't install.
+    brew bundle --file="$HOME/Brewfile.macos" \
+      || warn "brew bundle (Brewfile.macos) had failures — sign in to the App Store, then re-run: brew bundle --file=~/Brewfile.macos"
   fi
 else
   # light: editing/navigation core only. git is system-provided (Xcode CLT on
@@ -146,6 +153,14 @@ if have ya; then
   info "Installing yazi packages"
   ya pkg install || true
 fi
+# Install Neovim plugins at the commits pinned in lazy-lock.json, so the first
+# launch is ready to use. Mason LSPs/formatters and treesitter parsers still
+# install in the background on first launch.
+if have nvim && [ -f "$HOME/.config/nvim/init.lua" ]; then
+  info "Installing Neovim plugins (lazy.nvim restore from lazy-lock.json)"
+  nvim --headless "+Lazy! restore" +qa >/dev/null 2>&1 \
+    || warn "lazy.nvim restore failed — open nvim and run :Lazy restore"
+fi
 
 # 7. tmux: TPM + plugins ----------------------------------------------------
 TPM="$HOME/.config/tmux/plugins/tpm"
@@ -176,6 +191,18 @@ if [ "$MODE" = full ] && have fnm && [ -f "$NODE_VERSIONS" ]; then
       fnm default "$ver" || warn "fnm default $ver failed"
     fi
   done < "$NODE_VERSIONS"
+  # Point this shell at the new default so npm below resolves to it.
+  fnm use default >/dev/null 2>&1 || true
+fi
+
+# 8b. Global npm packages (full only) ---------------------------------------
+# Separate bundle file because npm only exists after the fnm step above.
+# npm 12 blocks install scripts by default; snyk needs its postinstall to fetch
+# the CLI binary, so allow exactly that one, for this run only.
+if [ "$MODE" = full ] && have npm && [ -f "$HOME/Brewfile.npm" ]; then
+  info "Installing global npm packages from ~/Brewfile.npm"
+  npm_config_allow_scripts=snyk brew bundle --file="$HOME/Brewfile.npm" \
+    || warn "brew bundle (Brewfile.npm) had failures — re-run: brew bundle --file=~/Brewfile.npm"
 fi
 
 # 9. SDKMAN (optional, full only) -------------------------------------------
@@ -194,6 +221,29 @@ if [ "$MODE" = full ] && have uv; then
     record "uvtool:sqlit-tui"
     info "Installing Sqlit with MySQL support"
     uv tool install 'sqlit-tui==1.6.5' --with PyMySQL
+  fi
+fi
+
+# 10b. Claude Code + its plugins (full only) ---------------------------------
+# Native installer (self-updating, lives in ~/.local/bin + ~/.local/share/claude).
+# Settings, keybindings and statusline come from this repo; plugins listed under
+# enabledPlugins in ~/.claude/settings.json are installed here so they are
+# present before the first session. Sign-in happens on first launch.
+if [ "$MODE" = full ]; then
+  if ! have claude && [ ! -x "$HOME/.local/bin/claude" ]; then
+    record "claude"
+    info "Installing Claude Code"
+    curl -fsSL https://claude.ai/install.sh | bash || warn "Claude Code install failed"
+  fi
+  CLAUDE_BIN="$(command -v claude || echo "$HOME/.local/bin/claude")"
+  if [ -x "$CLAUDE_BIN" ] && have jq && [ -f "$HOME/.claude/settings.json" ]; then
+    info "Installing Claude Code plugins from settings.json"
+    jq -r '.enabledPlugins // {} | to_entries[] | select(.value) | .key' "$HOME/.claude/settings.json" \
+      | while read -r plugin; do
+          "$CLAUDE_BIN" plugin list 2>/dev/null | grep -qF "$plugin" && continue
+          "$CLAUDE_BIN" plugin install "$plugin" </dev/null \
+            || warn "claude plugin install $plugin failed"
+        done
   fi
 fi
 
@@ -308,6 +358,11 @@ if [ "$MODE" = full ] && [ "$OS" = "Darwin" ]; then
     for service in sketchybar borders micstatus; do
       record "launchagent:com.filipurminsky.desktop.$service"
     done
+  fi
+
+  if [ -x "$HOME/.config/dotfiles/macos-defaults.sh" ]; then
+    info "Applying macOS system defaults"
+    "$HOME/.config/dotfiles/macos-defaults.sh" || warn "macos-defaults.sh failed"
   fi
 
   # First launch registers AeroSpace's start-at-login item.

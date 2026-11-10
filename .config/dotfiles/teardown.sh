@@ -97,6 +97,18 @@ if manifest_has "uvtool:sqlit-tui" && have uv; then
   uv tool uninstall sqlit-tui || true
 fi
 
+# 4b. Claude Code (only if bootstrap installed it) ---------------------------
+# Removes the native install (launcher + versions). ~/.claude settings are
+# tracked dotfiles and go with step 9; session data is left in place.
+if manifest_has "claude"; then
+  info "Removing Claude Code"
+  rm -f "$HOME/.local/bin/claude"
+  rm -rf "$HOME/.local/share/claude"
+fi
+
+# Global npm packages (Brewfile.npm) live inside fnm's Node installs and go
+# with ~/.local/share/fnm in step 2.
+
 # 5. SDKMAN (only if bootstrap installed it) ---------------------------------
 if manifest_has "sdkman" && [ -d "$HOME/.sdkman" ]; then
   info "rm ~/.sdkman"; rm -rf "$HOME/.sdkman"
