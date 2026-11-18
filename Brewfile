@@ -93,6 +93,8 @@ brew "luarocks"
 brew "tesseract-lang"
 # OpenBSD freely-licensed SSH connectivity tools
 brew "openssh"
+# Archive tool; yazi's ouch.yazi uses it to preview archive contents
+brew "ouch"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # PDF rendering library (based on the xpdf-3.0 code base)
