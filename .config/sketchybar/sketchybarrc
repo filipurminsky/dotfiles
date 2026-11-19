@@ -268,9 +268,7 @@ sketchybar --add item wifi right \
     script="$PLUGIN_DIR/wifi.sh"
 
 # No sketchybar event fires on VPN state, so this polls. Grouped next to wifi.
-# GlobalProtect's only UI is a popover on its menu-bar status item — just
-# activating the app shows nothing, so the click "presses" the status item
-# via System Events (same Automation grant the lock-screen item uses).
+# Click opens the AWS VPN Client window.
 sketchybar --add item vpn right \
   --subscribe vpn wifi_change system_woke mouse.entered mouse.exited \
   --set vpn \
@@ -286,7 +284,7 @@ sketchybar --add item vpn right \
     icon.background.padding_left=-3 \
     icon.background.padding_right=-3 \
     icon.padding_right=6 \
-    click_script="/usr/bin/osascript -e 'tell application \"System Events\" to tell process \"GlobalProtect\" to click menu bar item 1 of menu bar 2' 2>/dev/null || open -a GlobalProtect" \
+    click_script="open -a 'AWS VPN Client'" \
     script="$PLUGIN_DIR/vpn.sh"
 
 # Shared pill for the network cluster; hover.sh repaints this bracket when the
