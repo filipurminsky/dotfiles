@@ -21,6 +21,8 @@ brew "nasedkinpv/tap/numr"
 
 # i3-like tiling window manager for macOS
 cask "nikitabobko/tap/aerospace"
+# AWS Client VPN (the sketchybar VPN indicator reads its log)
+cask "aws-vpn-client"
 # Privacy-focused web browser
 cask "brave-browser"
 # OpenAI's coding agent that runs in your terminal
